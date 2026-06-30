@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Movimiento de Proyectil</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
+  --accent:#3b82f6;--accent2:#06b6d4;--accent3:#8b5cf6;
+  --text:#e2e8f0;--muted:#64748b;--yellow:#f59e0b;--red:#ef4444;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;padding:1.5rem;}
+/* HEADER */
+header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:#fff;flex-shrink:0}
+header h1{font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
+
+/* CONTROLS */
+.ctrl-row{display:flex;flex-wrap:wrap;gap:.7rem;background:var(--surface);border-radius:12px;padding:.875rem;border:1px solid var(--border);margin-bottom:.75rem}
+.ctrl-group{display:flex;flex-direction:column;gap:3px;min-width:120px}
+.ctrl-group label{font-size:.67rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase}
+.ctrl-group input[type=range]{accent-color:var(--accent);width:100%}
+.ctrl-group .val{font-size:.78rem;font-family:'Space Mono',monospace;color:var(--accent2)}
+.ctrl-group select{background:#0f172a;border:1px solid var(--border);color:var(--text);padding:5px 6px;border-radius:6px;font-size:.82rem;font-family:'Space Grotesk',sans-serif}
+.btn{padding:.5rem 1.1rem;border:none;border-radius:8px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.82}
+.btn-blue{background:#2563eb}
+.btn-gray{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.btn-green{background:#16a34a}
+
+/* MODE BAR */
+.mode-bar{display:flex;gap:.5rem;align-items:center;background:#0d1422;border-radius:10px;padding:.55rem .875rem;border:1px solid var(--border);margin-bottom:.75rem;flex-wrap:wrap}
+.mode-bar span{font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;margin-right:.25rem}
+.pill{padding:.42rem 1rem;border-radius:20px;font-size:.8rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:500;transition:all .15s;background:transparent}
+.pill.active-blue{border:1.5px solid var(--accent);background:rgba(59,130,246,.15);color:var(--accent);font-weight:700}
+.pill.active-yellow{border:1.5px solid var(--yellow);background:rgba(245,158,11,.15);color:var(--yellow);font-weight:700}
+.pill.inactive{border:1.5px solid var(--border);color:var(--muted)}
+#resume-btn{margin-left:auto;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* CANVAS WRAP */
+.canvas-wrap{position:relative;margin-bottom:.75rem}
+canvas.main-canvas{border-radius:12px;border:1.5px solid var(--border);background:#000010;width:100%;display:block;cursor:crosshair;transition:border-color .2s,box-shadow .2s}
+canvas.main-canvas.paused-border{border-color:var(--yellow);box-shadow:0 0 18px rgba(245,158,11,.25)}
+
+/* STATUS BADGE */
+.status-badge{position:absolute;top:10px;left:12px;border-radius:8px;padding:5px 12px;font-size:.72rem;font-family:'Space Mono',monospace;color:#fff;display:none;align-items:center;gap:6px}
+
+/* LEGEND */
+.legend{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:4px;background:rgba(10,14,26,.88);border-radius:8px;padding:8px 12px;border:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:18px;height:3px;border-radius:2px}
+.legend-item span{font-size:.63rem;color:#94a3b8;font-family:'Space Mono',monospace}
+
+/* DATA PANELS */
+.data-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.data-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem}
+.data-box-title{font-size:.67rem;color:#475569;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.55rem}
+.data-vals{display:flex;flex-wrap:wrap;gap:.75rem}
+.dv-label{font-size:.62rem;color:#475569;font-family:'Space Mono',monospace;text-transform:uppercase}
+.dv-val{font-family:'Space Mono',monospace;font-weight:700;font-size:.9rem}
+.italic-hint{color:#334155;font-size:.8rem;font-style:italic}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🚀</div>
+  <div>
+    <h1>Simulador de Movimiento de Proyectil</h1>
+  </div>
+</header>
+
+<main>
+  <div class="mode-bar">
+    <span>Modo</span>
+    <button class="pill active-blue" id="pill-tray" onclick="setMode('trayectoria')">📍 Trayectoria — click en el recorrido</button>
+    <button class="pill inactive"    id="pill-pause" onclick="setMode('pausa')">⏸ Pausa — click congela el proyectil</button>
+    <button class="btn btn-green" id="resume-btn" style="display:none;margin-left:auto" onclick="resumeProj()">▶ Reanudar</button>
+  </div>
+  
+  <div class="ctrl-row">
+    <div class="ctrl-group">
+      <label>Ángulo (°)</label>
+      <input type="range" id="p-angle" min="5" max="85" value="45" oninput="pv('p-angle-v',this.value+'°')">
+      <span class="val" id="p-angle-v">45°</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Velocidad (m/s)</label>
+      <input type="range" id="p-vel" min="5" max="100" value="40" oninput="pv('p-vel-v',this.value)">
+      <span class="val" id="p-vel-v">40</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Gravedad (m/s²)</label>
+      <input type="range" id="p-g" min="1" max="25" value="9.8" step="0.1" oninput="pv('p-g-v',this.value)">
+      <span class="val" id="p-g-v">9.8</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Masa (kg)</label>
+      <input type="range" id="p-mass" min="0.1" max="10" value="1" step="0.1" oninput="pv('p-mass-v',this.value)">
+      <span class="val" id="p-mass-v">1</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Resist. aire</label>
+      <select id="p-drag">
+        <option value="0">Sin resistencia</option>
+        <option value="0.005">Leve</option>
+        <option value="0.015">Moderada</option>
+        <option value="0.04">Alta</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="launchProj()">🚀 Lanzar</button>
+      <button class="btn btn-gray" onclick="resetProj()">↺ Reset</button>
+      <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="p-vec" checked> Vectores
+      </label>
+    </div>
+  </div>
+  
+  <div class="canvas-wrap">
+    <canvas id="proj-canvas" class="main-canvas" height="450"></canvas>
+    <div class="status-badge" id="status-badge"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:white"></div><span>|V| velocidad total</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div><span>Vx  componente X</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span>Vy  componente Y</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div><span>Fg  peso / gravedad</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span>Fd  resist. del aire</span></div>
+    </div>
+  </div>
+  
+  <div class="data-row">
+    <div class="data-box">
+      <div class="data-box-title">Trayectoria completa</div>
+      <div class="data-vals">
+        <div><div class="dv-label">Alcance</div><div class="dv-val" id="d-range" style="color:#3b82f6">—</div></div>
+        <div><div class="dv-label">Altura máx</div><div class="dv-val" id="d-hmax" style="color:#06b6d4">—</div></div>
+        <div><div class="dv-label">T. vuelo</div><div class="dv-val" id="d-time" style="color:#8b5cf6">—</div></div>
+      </div>
+    </div>
+    <div class="data-box" id="vec-box" style="border-color:var(--border);transition:border-color .2s">
+      <div class="data-box-title" style="display:flex;align-items:center;gap:.5rem">
+        Vectores en instante
+        <span id="t-badge" style="display:none;font-size:.62rem;font-family:monospace;padding:2px 8px;border-radius:4px;background:#f59e0b22;color:#f59e0b"></span>
+      </div>
+      <div id="vec-vals" class="data-vals">
+        <div class="italic-hint">Lanza el proyectil primero</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Utilidad para pintar valores en el DOM
+function pv(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+
+// Dibujo de flechas para los vectores
+function drawArrow(ctx, x1, y1, x2, y2, color, lw=2.5, label='', ldx=10, ldy=0) {
+  const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<2) return;
+  const ang=Math.atan2(dy,dx), hl=Math.max(13,lw*5);
+  ctx.save();
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=lw;
+  ctx.shadowColor=color; ctx.shadowBlur=10;
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2-Math.cos(ang)*hl*.55, y2-Math.sin(ang)*hl*.55);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hl*Math.cos(ang-.38), y2-hl*Math.sin(ang-.38));
+  ctx.lineTo(x2-hl*Math.cos(ang+.38), y2-hl*Math.sin(ang+.38));
+  ctx.closePath(); ctx.fill();
+  if(label){
+    ctx.shadowBlur=0; ctx.font='bold 11px monospace'; ctx.fillStyle=color;
+    ctx.fillText(label, x2+ldx, y2+ldy);
+  }
+  ctx.restore();
+}
+
+// Variables globales del sistema
+let _raf = null;
+const GND = 40;
+const PS = {
+  trail:[], running:false, paused:false, finished:false,
+  vx:0, vy:0, x:0, y:0, t:0, hmax:0, scale:1,
+  gVal:9.8, drag:0, mass:1, mode:'trayectoria', pinIdx:null
+};
+
+function setMode(m) {
+  PS.mode = m;
+  document.getElementById('pill-tray').className  = 'pill ' + (m==='trayectoria' ? 'active-blue' : 'inactive');
+  document.getElementById('pill-pause').className = 'pill ' + (m==='pausa'       ? 'active-yellow' : 'inactive');
+  resetProj();
+}
+
+function drawProjBase() {
+  const c=document.getElementById('proj-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width, H=c.height;
+  
+  // Fondo
+  ctx.fillStyle='#000010'; ctx.fillRect(0,0,W,H);
+  
+  // Grid
+  ctx.strokeStyle='rgba(30,58,95,.5)'; ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  
+  // Suelo
+  ctx.strokeStyle='#2563eb'; ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,H-GND);ctx.lineTo(W,H-GND);ctx.stroke();
+  ctx.fillStyle='rgba(37,99,235,.07)';ctx.fillRect(0,H-GND,W,GND);
+  ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=1;
+  for(let x=60;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,H-GND);ctx.lineTo(x,H-GND+8);ctx.stroke();}
+  
+  // Cañón
+  const a=+document.getElementById('p-angle').value*Math.PI/180;
+  ctx.save();ctx.translate(50,H-GND);ctx.rotate(-a);
+  ctx.fillStyle='#4b5563';ctx.beginPath();ctx.roundRect(-10,-8,42,16,4);ctx.fill();ctx.restore();
+  ctx.beginPath();ctx.arc(50,H-GND,16,0,Math.PI*2);
+  const cg=ctx.createRadialGradient(44,H-GND-6,2,50,H-GND,16);
+  cg.addColorStop(0,'#6b7280');cg.addColorStop(1,'#1f2937');
+  ctx.fillStyle=cg;ctx.fill();
+}
+
+function projVectors(ctx,p,px,py,sc) {
+  const VS=Math.max(sc*1.3,4), FS=Math.max(sc*2.8,7);
+  const spd=Math.sqrt(p.vx**2+p.vy**2);
+  
+  if(Math.abs(p.vx)>.3) drawArrow(ctx,px,py,px+p.vx*VS,py,'#06b6d4',2.5,`Vx=${p.vx.toFixed(1)}`,2,-8);
+  if(Math.abs(p.vy)>.3) drawArrow(ctx,px,py,px,py-p.vy*VS,'#4ade80',2.5,`Vy=${p.vy.toFixed(1)}`,4,0);
+  
+  const vtx=px+p.vx*VS, vty=py-p.vy*VS;
+  drawArrow(ctx,px,py,vtx,vty,'rgba(255,255,255,.95)',3,`|V|=${spd.toFixed(1)}`,4,-6);
+  
+  ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(px+p.vx*VS,py);ctx.lineTo(vtx,vty);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px,py-p.vy*VS);ctx.lineTo(vtx,vty);ctx.stroke();ctx.restore();
+  
+  const Fg=p.mass*PS.gVal;
+  drawArrow(ctx,px,py,px,py+Fg*FS,'#ef4444',2.5,`Fg=${Fg.toFixed(1)}N`,4,6);
+  
+  if(PS.drag>0&&spd>.1){
+    const Fd=PS.drag*spd*spd;
+    drawArrow(ctx,px,py,px+(-p.vx/spd)*Fd*FS*5,py-(-p.vy/spd)*Fd*FS*5,'#f97316',2.5,`Fd=${Fd.toFixed(2)}N`,4,0);
+  }
+}
+
+function projScene(frozenIdx) {
+  const c=document.getElementById('proj-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width, H=c.height;
+  const showVec=document.getElementById('p-vec')?.checked!==false;
+  
+  drawProjBase();
+  if(!PS.trail.length) return;
+  
+  const sc=PS.scale, upTo=frozenIdx!==null ? frozenIdx+1 : PS.trail.length;
+  const vel=+document.getElementById('p-vel').value;
+
+  // Dibujar línea de trayectoria
+  for(let i=1;i<upTo;i++){
+    const p0=PS.trail[i-1],p1=PS.trail[i];
+    const spd=Math.sqrt(p1.vx**2+p1.vy**2);
+    const t=Math.min(spd/(vel||1),1);
+    const r=Math.round(59+t*196),gb=Math.round(130-t*100);
+    ctx.strokeStyle=`rgba(${r},${gb},246,.55)`;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(50+p0.x*sc,H-GND-p0.y*sc);ctx.lineTo(50+p1.x*sc,H-GND-p1.y*sc);ctx.stroke();
+  }
+  
+  // Dibujar puntos a intervalos
+  for(let i=0;i<upTo;i+=10){
+    const p=PS.trail[i];
+    ctx.beginPath();ctx.arc(50+p.x*sc,H-GND-p.y*sc,3,0,Math.PI*2);
+    ctx.fillStyle='rgba(148,197,253,.45)';ctx.fill();
+  }
+
+  // MODO TRAYECTORIA: Punto seleccionado
+  if(PS.mode==='trayectoria' && PS.pinIdx!==null && PS.trail[PS.pinIdx] && frozenIdx===null){
+    const p=PS.trail[PS.pinIdx];
+    const px=50+p.x*sc, py=H-GND-p.y*sc;
+    ctx.beginPath();ctx.arc(px,py,10,0,Math.PI*2);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fillStyle='#fbbf24';ctx.fill();
+    if(showVec) projVectors(ctx,p,px,py,sc);
+  }
+
+  // MODO PAUSA: Proyectil congelado
+  if(frozenIdx!==null && PS.trail[frozenIdx]){
+    const p=PS.trail[frozenIdx];
+    const bx=50+p.x*sc, by=H-GND-p.y*sc;
+    ctx.save();ctx.shadowColor='#f59e0b';ctx.shadowBlur=22;
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(bx,by,14,0,Math.PI*2);ctx.stroke();ctx.restore();
+    const bg=ctx.createRadialGradient(bx-4,by-4,1,bx,by,13);
+    bg.addColorStop(0,'#fde68a');bg.addColorStop(1,'#b45309');
+    ctx.beginPath();ctx.arc(bx,by,13,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+    ctx.save();ctx.fillStyle='rgba(10,14,26,.85)';ctx.beginPath();ctx.roundRect(bx-38,by-32,76,22,5);ctx.fill();
+    ctx.fillStyle='#f59e0b';ctx.font='bold 11px monospace';ctx.textAlign='center';
+    ctx.fillText(`⏸  t=${p.t.toFixed(2)}s`,bx,by-15);ctx.restore();
+    if(showVec) projVectors(ctx,p,bx,by,sc);
+  } 
+  // Proyectil en movimiento
+  else if(frozenIdx===null && !PS.finished && PS.trail.length){
+    const last=PS.trail[PS.trail.length-1];
+    const bx=50+last.x*sc, by=H-GND-last.y*sc;
+    const bg=ctx.createRadialGradient(bx-3,by-3,1,bx,by,11);
+    bg.addColorStop(0,'#bfdbfe');bg.addColorStop(1,'#1d4ed8');
+    ctx.beginPath();ctx.arc(bx,by,11,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+    if(showVec) projVectors(ctx,last,bx,by,sc);
+  }
+
+  // Pista de interacción (hint)
+  if(PS.finished && PS.pinIdx===null && frozenIdx===null && PS.mode==='trayectoria'){
+    ctx.save();ctx.fillStyle='rgba(20,30,55,.88)';ctx.beginPath();
+    ctx.roundRect(W/2-180,H/2-22,360,40,8);ctx.fill();
+    ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';
+    ctx.fillText('🖱 Haz clic en la trayectoria para ver vectores',W/2,H/2+4);ctx.restore();
+  }
+}
+
+function setPinnedData(p) {
+  const spd=Math.sqrt(p.vx**2+p.vy**2);
+  const Fg=p.mass*PS.gVal, Fd=PS.drag>0?PS.drag*spd*spd:0;
+  document.getElementById('vec-box').style.borderColor='rgba(245,158,11,.35)';
+  const tb=document.getElementById('t-badge'); tb.style.display='';tb.textContent=`t=${p.t.toFixed(2)}s`;
+  
+  document.getElementById('vec-vals').innerHTML=[
+    ['Vx', p.vx.toFixed(2)+' m/s','#06b6d4'],
+    ['Vy', p.vy.toFixed(2)+' m/s','#4ade80'],
+    ['|V|',spd.toFixed(2)+' m/s','white'],
+    ['Fg', Fg.toFixed(2)+' N','#ef4444'],
+    ['Fd', Fd.toFixed(3)+' N','#f97316'],
+    ['θ', (Math.atan2(p.vy,p.vx)*180/Math.PI).toFixed(1)+'°','#a78bfa'],
+    ['ax','0 m/s²','#94a3b8'],
+    ['ay',(-PS.gVal).toFixed(1)+' m/s²','#ef4444'],
+  ].map(([l,v,c])=>`<div><div class="dv-label">${l}</div><div class="dv-val" style="color:${c}">${v}</div></div>`).join('');
+}
+
+function projClick(e){
+  const c=document.getElementById('proj-canvas'); if(!c) return;
+  
+  // MODO PAUSA
+  if(PS.mode==='pausa'){
+    if(PS.running && !PS.paused){
+      PS.running=false; PS.paused=true;
+      if(_raf){cancelAnimationFrame(_raf);_raf=null;}
+      PS.pinIdx=PS.trail.length-1;
+      projScene(PS.pinIdx);
+      const p=PS.trail[PS.pinIdx]; setPinnedData(p);
+      
+      c.className='main-canvas paused-border'; c.style.cursor='pointer';
+      const sb=document.getElementById('status-badge');
+      sb.style.display='flex';sb.style.background='rgba(180,83,9,.9)';sb.style.border='1px solid #f59e0b';
+      sb.innerHTML='⏸ PAUSADO — click para reanudar';
+      document.getElementById('resume-btn').style.display='';
+    } else if(PS.paused){
+      resumeProj();
+    }
+    return;
+  }
+  
+  // MODO TRAYECTORIA
+  if(!PS.trail.length||PS.running) return;
+  const rect=c.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(c.width/rect.width);
+  const my=(e.clientY-rect.top)*(c.height/rect.height);
+  const H=c.height;
+  
+  let best=null,bestD=1e9;
+  PS.trail.forEach((p,i)=>{
+    const px=50+p.x*PS.scale,py=H-GND-p.y*PS.scale;
+    const d=Math.sqrt((mx-px)**2+(my-py)**2);
+    if(d<bestD){bestD=d;best=i;}
+  });
+  
+  if(best!==null&&bestD<45){
+    PS.pinIdx=best;
+    projScene(null);
+    setPinnedData(PS.trail[best]);
+  }
+}
+
+function resumeProj(){
+  PS.paused=false; PS.running=true; PS.pinIdx=null;
+  document.getElementById('proj-canvas').className='main-canvas';
+  document.getElementById('proj-canvas').style.cursor='cell';
+  document.getElementById('status-badge').style.display='none';
+  document.getElementById('resume-btn').style.display='none';
+  document.getElementById('vec-vals').innerHTML='<div class="italic-hint">Click para pausar de nuevo</div>';
+  document.getElementById('vec-box').style.borderColor='var(--border)';
+  document.getElementById('t-badge').style.display='none';
+  projLoop();
+}
+
+function launchProj(){
+  if(_raf){cancelAnimationFrame(_raf);_raf=null;}
+  
+  PS.pinIdx=null; PS.paused=false; PS.finished=false;
+  
+  const a=+document.getElementById('p-angle').value*Math.PI/180;
+  const vel=+document.getElementById('p-vel').value;
+  PS.gVal=+document.getElementById('p-g').value;
+  PS.drag=+document.getElementById('p-drag').value;
+  PS.mass=+document.getElementById('p-mass').value;
+  
+  Object.assign(PS,{
+    trail:[], running:true, 
+    vx:vel*Math.cos(a), vy:vel*Math.sin(a), 
+    x:0, y:0, t:0, hmax:0, scale:1
+  });
+  
+  ['d-range','d-hmax','d-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  
+  document.getElementById('vec-vals').innerHTML=PS.mode==='pausa'
+    ? '<div class="italic-hint">Click para pausar y ver vectores</div>'
+    : '<div class="italic-hint">Esperando lanzamiento...</div>';
+  document.getElementById('vec-box').style.borderColor='var(--border)';
+  document.getElementById('t-badge').style.display='none';
+  
+  const c=document.getElementById('proj-canvas');
+  c.className='main-canvas'; 
+  c.style.cursor=PS.mode==='pausa'?'cell':'crosshair';
+  document.getElementById('status-badge').style.display=PS.mode==='pausa'?'flex':'none';
+  
+  if(PS.mode==='pausa'){
+    const sb=document.getElementById('status-badge');
+    sb.style.background='rgba(22,101,52,.88)';sb.style.border='1px solid #16a34a';
+    sb.innerHTML='▶ EN VUELO — click para pausar';
+  }
+  document.getElementById('resume-btn').style.display='none';
+  
+  projLoop();
+}
+
+function projLoop(){
+  if(!PS.running) return;
+  const dt=0.016;
+  
+  // Ecuaciones de movimiento (Euler)
+  PS.vx-=PS.drag*PS.vx*Math.abs(PS.vx)*dt;
+  PS.vy-=(PS.gVal-PS.drag*PS.vy*Math.abs(PS.vy))*dt;
+  PS.x+=PS.vx*dt; 
+  PS.y+=PS.vy*dt; 
+  PS.t+=dt;
+  
+  if(PS.y>PS.hmax) PS.hmax=PS.y;
+  
+  PS.trail.push({x:PS.x,y:PS.y,vx:PS.vx,vy:PS.vy,mass:PS.mass,t:PS.t});
+  
+  const c=document.getElementById('proj-canvas'); 
+  if(!c){PS.running=false;return;}
+  
+  // Escala dinámica (para mantener el proyectil en pantalla)
+  const maxX=Math.max(...PS.trail.map(p=>p.x),1);
+  const maxY=Math.max(...PS.trail.map(p=>p.y),1);
+  PS.scale=Math.min((c.width-80)/(maxX*1.15),(c.height-GND-30)/(maxY*1.2),6);
+  
+  projScene(null);
+  
+  // Detectar colisión con el suelo
+  if(PS.y<=0&&PS.t>.05){
+    PS.running=false; PS.finished=true;
+    projScene(PS.pinIdx);
+    
+    document.getElementById('d-range').textContent=PS.x.toFixed(1)+' m';
+    document.getElementById('d-hmax').textContent=PS.hmax.toFixed(1)+' m';
+    document.getElementById('d-time').textContent=PS.t.toFixed(2)+' s';
+    
+    if(PS.mode==='pausa'){
+      document.getElementById('status-badge').style.display='none';
+      document.getElementById('resume-btn').style.display='none';
+    }
+    if(PS.mode==='trayectoria'){
+      document.getElementById('vec-vals').innerHTML='<div class="italic-hint">🖱 Click en la trayectoria para ver vectores</div>';
+    }
+    return;
+  }
+  
+  _raf=requestAnimationFrame(projLoop);
+}
+
+function resetProj(){
+  if(_raf){cancelAnimationFrame(_raf);_raf=null;}
+  Object.assign(PS,{trail:[],running:false,paused:false,finished:false,pinIdx:null});
+  
+  drawProjBase();
+  
+  ['d-range','d-hmax','d-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  const vv=document.getElementById('vec-vals'); if(vv) vv.innerHTML='<div class="italic-hint">Lanza el proyectil primero</div>';
+  const vb=document.getElementById('vec-box'); if(vb) vb.style.borderColor='var(--border)';
+  const tb=document.getElementById('t-badge'); if(tb) tb.style.display='none';
+  const sb=document.getElementById('status-badge'); if(sb) sb.style.display='none';
+  const rb=document.getElementById('resume-btn'); if(rb) rb.style.display='none';
+  
+  const pc=document.getElementById('proj-canvas'); 
+  if(pc){pc.className='main-canvas';pc.style.cursor='crosshair';}
+}
+
+// Inicialización al cargar la página
+window.addEventListener('DOMContentLoaded', () => {
+  const c = document.getElementById('proj-canvas');
+  // Ajustar el ancho al contenedor padre
+  c.width = c.parentElement.clientWidth;
+  
+  // Agregar event listener para el click en el canvas
+  c.onclick = projClick;
+  
+  // Manejar el redimensionamiento de ventana
+  window.addEventListener('resize', () => {
+    if(c) {
+      c.width = c.parentElement.clientWidth;
+      projScene(PS.paused ? PS.pinIdx : null);
+    }
+  });
+
+  // Dibujar escenario base
+  drawProjBase();
+});
+</script>
+</body>
+</html>
