@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduSim - Plataforma de Simuladores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Nunito',sans-serif}
+body{background:#eef8ff;color:#253858}
+header{background:linear-gradient(135deg,#4F46E5,#06B6D4);padding:55px;color:#fff;text-align:center}
+header h1{font-size:48px;font-weight:800}
+header p{margin:15px auto;max-width:700px}
+.search{max-width:700px;margin:25px auto;display:flex;background:#fff;border-radius:50px;padding:8px}
+.search input{flex:1;border:none;outline:none;padding:16px;border-radius:50px}
+.search button{border:none;background:#FFB703;padding:16px 30px;border-radius:40px;font-weight:700}
+.container{max-width:1250px;margin:auto;padding:40px 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:25px}
+.card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.08);transition:.3s}
+.card:hover{transform:translateY(-6px)}
+.banner{height:140px;display:flex;align-items:center;justify-content:center;font-size:64px;color:#fff}
+.c1{background:#06B6D4}.c2{background:#4F46E5}.c3{background:#F97316}.c4{background:#10B981}.c5{background:#EC4899}.c6{background:#EF4444}
+.content{padding:20px}
+.content h3{margin-bottom:10px}
+.content p{color:#555;line-height:1.6;margin-bottom:18px}
+.btn{display:inline-block;background:#4F46E5;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700}
+footer{text-align:center;padding:30px;background:#1E293B;color:#fff;margin-top:40px}
+</style>
+</head>
+<body>
+<header>
+<h1>🎓 EduSim</h1>
+<p>Plataforma de simuladores educativos interactivos.</p>
+<div class="search"><input placeholder="Buscar simulador..."><button>Buscar</button></div>
+</header>
+<div class="container">
+<section class="grid">
+<div class="card"><div class="banner c1">🏹</div><div class="content"><h3>Lanzamiento de Proyectiles</h3><p><b>Física</b><br>Explora el movimiento parabólico.</p><a class="btn" href="lanzamiento-proyectiles.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c2">🧪</div><div class="content"><h3>Escala de pH Químico</h3><p><b>Química</b><br>Identifica ácidos y bases.</p><a class="btn" href="escala-ph-quimico.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c3">🧬</div><div class="content"><h3>Cuadros de Punnett</h3><p><b>Biología</b><br>Predice la herencia genética.</p><a class="btn" href="cuadros-punnett.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c4">➗</div><div class="content"><h3>Fracciones Equivalentes</h3><p><b>Matemática</b><br>Aprende con representaciones visuales.</p><a class="btn" href="fracciones-equivalentes.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c5">♻️</div><div class="content"><h3>Clasificación de Residuos</h3><p><b>Educación Ambiental</b><br>Separa residuos correctamente.</p><a class="btn" href="clasificacion-residuos.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c6">🚦</div><div class="content"><h3>Semáforos y Cruce Vial</h3><p><b>Seguridad Vial</b><br>Practica normas de tránsito.</p><a class="btn" href="semaforos-cruce-vial.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c2">💻</div><div class="content"><h3>Lógica de Programación</h3><p><b>Informática</b><br>Resuelve retos de lógica.</p><a class="btn" href="logica-programacion.html">Abrir simulador</a></div></div>
+<div class="card"><div class="banner c1">❤️</div><div class="content"><h3>Soporte Vital RCP</h3><p><b>Salud</b><br>Aprende la secuencia básica de RCP.</p><a class="btn" href="soporte-vital-rcp.html">Abrir simulador</a></div></div>
+</section>
+</div>
+<footer>© 2026 EduSim</footer>
+</body></html>
