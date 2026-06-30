@@ -1,5 +1,11 @@
 [
   {
+    "titulo": "SimLab",
+    "categoria": "Simuladores",
+    "icono": "🧪",
+    "archivo": "simlab.html"
+  },
+  {
     "titulo": "Lanzamiento de Proyectiles",
     "categoria": "Física",
     "icono": "🏹",
