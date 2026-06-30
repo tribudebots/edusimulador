@@ -37,15 +37,31 @@ footer{text-align:center;padding:30px;background:#1E293B;color:#fff;margin-top:4
 </header>
 <div class="container">
 <section class="grid">
-<div class="card"><div class="banner c1">🏹</div><div class="content"><h3>Lanzamiento de Proyectiles</h3><p><b>Física</b><br>Explora el movimiento parabólico.</p><a class="btn" href="lanzamiento-proyectiles.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c2">🧪</div><div class="content"><h3>Escala de pH Químico</h3><p><b>Química</b><br>Identifica ácidos y bases.</p><a class="btn" href="escala-ph-quimico.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c3">🧬</div><div class="content"><h3>Cuadros de Punnett</h3><p><b>Biología</b><br>Predice la herencia genética.</p><a class="btn" href="cuadros-punnett.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c4">➗</div><div class="content"><h3>Fracciones Equivalentes</h3><p><b>Matemática</b><br>Aprende con representaciones visuales.</p><a class="btn" href="fracciones-equivalentes.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c5">♻️</div><div class="content"><h3>Clasificación de Residuos</h3><p><b>Educación Ambiental</b><br>Separa residuos correctamente.</p><a class="btn" href="clasificacion-residuos.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c6">🚦</div><div class="content"><h3>Semáforos y Cruce Vial</h3><p><b>Seguridad Vial</b><br>Practica normas de tránsito.</p><a class="btn" href="semaforos-cruce-vial.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c2">💻</div><div class="content"><h3>Lógica de Programación</h3><p><b>Informática</b><br>Resuelve retos de lógica.</p><a class="btn" href="logica-programacion.html">Abrir simulador</a></div></div>
-<div class="card"><div class="banner c1">❤️</div><div class="content"><h3>Soporte Vital RCP</h3><p><b>Salud</b><br>Aprende la secuencia básica de RCP.</p><a class="btn" href="soporte-vital-rcp.html">Abrir simulador</a></div></div>
 </section>
 </div>
 <footer>© 2026 EduSim</footer>
+<javascript>
+fetch("simuladores.json")
+.then(r=>r.json())
+.then(simuladores=>{
+
+    const grid=document.querySelector(".grid");
+
+    simuladores.forEach(sim=>{
+
+        grid.innerHTML+=`
+        <div class="card">
+            <h3>${sim.icono} ${sim.titulo}</h3>
+            <p>${sim.categoria}</p>
+
+            <a href="${sim.archivo}" class="btn">
+                Abrir
+            </a>
+
+        </div>`;
+
+    });
+
+});
+</javascript>
 </body></html>
