@@ -1,4 +1,10 @@
 [
+   {
+    "titulo": "Sistema Solar",
+    "categoria": "Física",
+    "icono": "🪐",
+    "archivo": "sistema_solar.html"
+  },
   {
     "titulo": "Lanzamiento de Proyectiles",
     "categoria": "Física",
