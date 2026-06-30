@@ -1,0 +1,319 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Clasificación de Residuos - Simulador Educativo Offline</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+          font-family: 'Nunito', sans-serif;
+        }
+      </style>
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ['Nunito', 'sans-serif'],
+              }
+            }
+          }
+        }
+      </script>
+    </head>
+    <body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-4xl h-[600px]">
+        
+<div class="flex flex-col h-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-emerald-50 via-green-500 to-lime-500 p-4 flex flex-wrap justify-between items-center text-white gap-2">
+    <div class="flex items-center gap-2">
+      <span class="p-2 bg-white/20 rounded-xl font-bold">♻️</span>
+      <div>
+        <h2 class="font-black text-base tracking-tight leading-none">Clasificación de Residuos</h2>
+        <p class="text-[10px] text-white/90">Gamificación ecológica y segregación responsable</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleSound()" id="sound-btn" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">🔊 Sonido</button>
+      <button onclick="toggleTheory()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">📖 Teoría</button>
+      <button onclick="toggleInstructions()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">💡 Ayuda</button>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-auto">
+    <div class="flex-1 flex flex-col p-4 gap-3 min-h-[300px]">
+      <div id="instructions-box" class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-2xl text-xs leading-relaxed">
+        <strong>Cómo jugar:</strong> Presiona "Comenzar Reto". Se mostrará un residuo en la tarjeta central. Haz clic en el contenedor de reciclaje correcto antes de que el tiempo expire (30 segundos). ¡Evita cometer errores!
+      </div>
+
+      <div class="flex-1 flex flex-col justify-around bg-slate-50 border rounded-3xl p-4 relative min-h-[220px]">
+        <!-- HUD stats -->
+        <div class="flex justify-between items-center bg-white px-4 py-2 rounded-2xl border text-xs font-black text-slate-700 shadow-sm">
+          <div>⏱️ Tiempo: <span id="time-left" class="text-slate-800">30</span>s</div>
+          <div>✅ Correctos: <span id="score" class="text-emerald-600">0</span></div>
+          <div>❌ Errores: <span id="errors" class="text-rose-500">0</span></div>
+        </div>
+
+        <!-- Waste Card Center -->
+        <div class="my-4 flex justify-center items-center h-36">
+          <div id="game-portal" class="text-center">
+            <button onclick="startGame()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold rounded-2xl shadow-md transition transform hover:scale-105 active:scale-95">Comenzar Reto</button>
+          </div>
+        </div>
+
+        <!-- Containers bins grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <button onclick="sortItem('organico')" id="bin-organico" disabled class="p-3 rounded-2xl bg-gradient-to-b from-[#6b5847] to-[#4e3d30] border-2 border-[#5a483a] text-white flex flex-col items-center justify-center transition hover:opacity-95 disabled:opacity-50">
+            <span class="text-xl mb-1">🟫</span>
+            <span class="text-xs font-black">Orgánico</span>
+            <span class="text-[9px] text-white/80 mt-1 uppercase font-semibold">Marrón</span>
+          </button>
+          <button onclick="sortItem('envase')" id="bin-envase" disabled class="p-3 rounded-2xl bg-gradient-to-b from-yellow-400 to-amber-500 border-2 border-yellow-500 text-white flex flex-col items-center justify-center transition hover:opacity-95 disabled:opacity-50">
+            <span class="text-xl mb-1">🟨</span>
+            <span class="text-xs font-black">Envases / Plásticos</span>
+            <span class="text-[9px] text-white/90 mt-1 uppercase font-semibold">Amarillo</span>
+          </button>
+          <button onclick="sortItem('papel')" id="bin-papel" disabled class="p-3 rounded-2xl bg-gradient-to-b from-blue-500 to-indigo-600 border-2 border-blue-600 text-white flex flex-col items-center justify-center transition hover:opacity-95 disabled:opacity-50">
+            <span class="text-xl mb-1">🟦</span>
+            <span class="text-xs font-black">Papel y Cartón</span>
+            <span class="text-[9px] text-white/90 mt-1 uppercase font-semibold">Azul</span>
+          </button>
+          <button onclick="sortItem('vidrio')" id="bin-vidrio" disabled class="p-3 rounded-2xl bg-gradient-to-b from-green-500 to-emerald-600 border-2 border-green-600 text-white flex flex-col items-center justify-center transition hover:opacity-95 disabled:opacity-50">
+            <span class="text-xl mb-1">🟩</span>
+            <span class="text-xs font-black">Vidrio</span>
+            <span class="text-[9px] text-white/90 mt-1 uppercase font-semibold">Verde</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick control bottom -->
+      <div class="flex items-center justify-between bg-slate-50 border p-3 rounded-2xl">
+        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Fomentando el reciclaje escolar</span>
+        <button onclick="startGame()" class="px-4 py-2 border hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition">Reiniciar Partida</button>
+      </div>
+    </div>
+
+    <!-- Sidebar challenges selection -->
+    <div class="w-full md:w-72 bg-slate-50 border-t md:border-t-0 md:border-l p-4 flex flex-col gap-4">
+      <span class="font-extrabold text-xs text-slate-700 border-b pb-2">⚙️ Configuración y Desafíos</span>
+      <div class="space-y-2">
+        <span class="font-bold text-[11px] text-slate-500 block">🏆 Retos de Clasificación</span>
+        <div class="flex flex-col gap-2">
+          <button onclick="selectChallenge(0)" id="btn-chal-0" class="w-full text-left p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-900">
+            <strong>♻️ Clasificador Novato</strong><br/>
+            <span class="text-slate-500 font-normal">Clasifica 6 residuos correctamente sin límites de tiempo estrictos.</span>
+          </button>
+          <button onclick="selectChallenge(1)" id="btn-chal-1" class="w-full text-left p-2 bg-white border rounded-xl text-xs text-slate-600 hover:bg-slate-100">
+            <strong>⚡ Velocista del Reciclaje</strong><br/>
+            <span class="text-slate-500 font-normal">Clasifica 8 residuos correctos en menos de 15 segundos (tiempo restante > 15s).</span>
+          </button>
+          <button onclick="selectChallenge(2)" id="btn-chal-2" class="w-full text-left p-2 bg-white border rounded-xl text-xs text-slate-600 hover:bg-slate-100">
+            <strong>🏆 Tolerancia Cero</strong><br/>
+            <span class="text-slate-500 font-normal">Clasifica 10 residuos seguidos de forma perfecta, sin cometer un solo error.</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="theory-box" class="hidden p-4 bg-amber-50 text-xs text-slate-600 border-t">
+    La segregación de residuos en origen promueve la economía circular. El contenedor marrón recibe materia orgánica; el amarillo recibe botellas y envases de plástico/aluminio; el azul recibe cartón y papel desarmado; el verde recibe frascos y botellas de vidrio.
+  </div>
+</div>
+
+      </div>
+
+      <script>
+        
+const WASTE_POOL = [
+  { name: 'Cáscara de Plátano', category: 'organico', icon: '🍌' },
+  { name: 'Botella de Agua Vacía', category: 'envase', icon: '🧴' },
+  { name: 'Caja de Cartón Desarmada', category: 'papel', icon: '📦' },
+  { name: 'Frasco de Perfume de Vidrio', category: 'vidrio', icon: '🫙' },
+  { name: 'Corazón de Manzana', category: 'organico', icon: '🍎' },
+  { name: 'Lata de Refresco', category: 'envase', icon: '🥫' },
+  { name: 'Periódico de Ayer', category: 'papel', icon: '📰' },
+  { name: 'Copa de Cristal Rota', category: 'vidrio', icon: '🍷' },
+  { name: 'Restos de Ensalada', category: 'organico', icon: '🥗' },
+  { name: 'Bolsa de Plástico', category: 'envase', icon: '🛍️' },
+  { name: 'Cuaderno Usado', category: 'papel', icon: '📓' },
+  { name: 'Botella de Refresco de Vidrio', category: 'vidrio', icon: '🍾' },
+];
+
+let itemsQueue = [];
+let currentIdx = 0;
+let score = 0;
+let errors = 0;
+let timeLeft = 30;
+let isPlaying = false;
+let activeChallengeIdx = 0;
+let timerId = null;
+let soundEnabled = true;
+
+function playTone(freq, duration) {
+  if (!soundEnabled) return;
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.08, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + duration);
+  } catch(e) {}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sonido' : '🔇 Silencio';
+}
+
+function toggleTheory() {
+  document.getElementById('theory-box').classList.toggle('hidden');
+}
+
+function toggleInstructions() {
+  document.getElementById('instructions-box').classList.toggle('hidden');
+}
+
+function selectChallenge(idx) {
+  if (isPlaying) return;
+  activeChallengeIdx = idx;
+  playTone(550, 0.1);
+  for (let i = 0; i < 3; i++) {
+    const btn = document.getElementById('btn-chal-' + i);
+    if (btn) {
+      if (i === idx) {
+        btn.className = "w-full text-left p-2.5 bg-amber-100 border border-amber-300 rounded-xl text-xs font-bold text-amber-900";
+      } else {
+        btn.className = "w-full text-left p-2 bg-white border rounded-xl text-xs text-slate-600 hover:bg-slate-100";
+      }
+    }
+  }
+}
+
+function startGame() {
+  if (timerId) clearInterval(timerId);
+  isPlaying = true;
+  score = 0;
+  errors = 0;
+  timeLeft = 30;
+  currentIdx = 0;
+
+  itemsQueue = [...WASTE_POOL].sort(() => Math.random() - 0.5);
+
+  document.getElementById('score').innerText = score;
+  document.getElementById('errors').innerText = errors;
+  document.getElementById('time-left').innerText = timeLeft;
+
+  ['organico', 'envase', 'papel', 'vidrio'].forEach(bin => {
+    document.getElementById('bin-' + bin).removeAttribute('disabled');
+  });
+
+  playTone(440, 0.15);
+  setTimeout(() => playTone(660, 0.2), 150);
+
+  timerId = setInterval(() => {
+    timeLeft--;
+    document.getElementById('time-left').innerText = timeLeft;
+    if (timeLeft <= 0) {
+      endGame();
+    }
+  }, 1000);
+
+  renderCard();
+}
+
+function renderCard() {
+  const portal = document.getElementById('game-portal');
+  if (currentIdx >= itemsQueue.length) {
+    itemsQueue = [...itemsQueue, ...[...WASTE_POOL].sort(() => Math.random() - 0.5)];
+  }
+
+  const item = itemsQueue[currentIdx];
+  portal.innerHTML = `
+    <div id="waste-card" class="w-64 bg-white border border-slate-200 rounded-3xl p-5 text-center shadow-lg transition duration-200 flex flex-col items-center justify-center">
+      <span class="text-4xl mb-2">${item.icon}</span>
+      <span class="text-sm font-black text-slate-800 leading-tight">${item.name}</span>
+      <span class="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider">¿A qué contenedor va?</span>
+    </div>
+  `;
+}
+
+function sortItem(binCategory) {
+  if (!isPlaying) return;
+  const currentItem = itemsQueue[currentIdx];
+  const card = document.getElementById('waste-card');
+
+  if (currentItem.category === binCategory) {
+    score++;
+    document.getElementById('score').innerText = score;
+    playTone(880, 0.1);
+    card.classList.add('ring-4', 'ring-emerald-500', 'scale-95');
+  } else {
+    errors++;
+    document.getElementById('errors').innerText = errors;
+    playTone(220, 0.2);
+    card.classList.add('ring-4', 'ring-rose-500');
+  }
+
+  setTimeout(() => {
+    currentIdx++;
+    renderCard();
+    checkInstantGoals();
+  }, 300);
+}
+
+function checkInstantGoals() {
+  if (activeChallengeIdx === 0 && score >= 6) endGame();
+  else if (activeChallengeIdx === 1 && score >= 8 && timeLeft > 15) endGame();
+  else if (activeChallengeIdx === 2 && score >= 10 && errors === 0) endGame();
+}
+
+function endGame() {
+  isPlaying = false;
+  clearInterval(timerId);
+
+  ['organico', 'envase', 'papel', 'vidrio'].forEach(bin => {
+    document.getElementById('bin-' + bin).setAttribute('disabled', 'true');
+  });
+
+  let success = false;
+  if (activeChallengeIdx === 0 && score >= 6) success = true;
+  else if (activeChallengeIdx === 1 && score >= 8 && timeLeft > 15) success = true;
+  else if (activeChallengeIdx === 2 && score >= 10 && errors === 0) success = true;
+
+  const portal = document.getElementById('game-portal');
+  if (success) {
+    playTone(1000, 0.4);
+    portal.innerHTML = `
+      <div class="space-y-3">
+        <h3 class="text-base font-black text-slate-800 font-sans">Reto Concluido</h3>
+        <p class="text-xs text-slate-500">Clasificaste correctamente ${score} residuos con ${errors} errores.</p>
+        <div class="bg-emerald-500 text-white inline-block px-4 py-1.5 rounded-full text-xs font-black shadow animate-pulse">🏆 ¡RETO COMPLETADO!</div>
+      </div>
+    `;
+  } else {
+    playTone(150, 0.5);
+    portal.innerHTML = `
+      <div class="space-y-3">
+        <h3 class="text-base font-black text-slate-800 font-sans">Reto Concluido</h3>
+        <p class="text-xs text-slate-500">Clasificaste ${score} residuos con ${errors} errores.</p>
+        <div class="bg-rose-500 text-white inline-block px-4 py-1.5 rounded-full text-xs font-black shadow">❌ Objetivo no alcanzado</div>
+      </div>
+    `;
+  }
+}
+
+      </script>
+    </body>
+    </html>
+  

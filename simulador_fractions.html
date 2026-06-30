@@ -1,0 +1,356 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Fracciones Equivalentes - Simulador Educativo Offline</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+          font-family: 'Nunito', sans-serif;
+        }
+      </style>
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ['Nunito', 'sans-serif'],
+              }
+            }
+          }
+        }
+      </script>
+    </head>
+    <body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-4xl h-[600px]">
+        
+<div class="flex flex-col h-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-4 flex flex-wrap justify-between items-center text-white gap-2">
+    <div class="flex items-center gap-2">
+      <span class="p-2 bg-white/20 rounded-xl font-bold">🍕</span>
+      <div>
+        <h2 class="font-extrabold text-base tracking-tight leading-none">Fracciones Equivalentes</h2>
+        <p class="text-[10px] text-white/90">Visualización de porciones, pizzas e igualdad matemática</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleSound()" id="sound-btn" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">🔊 Sonido</button>
+      <button onclick="toggleTheory()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">📖 Teoría</button>
+      <button onclick="toggleInstructions()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">💡 Ayuda</button>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-auto">
+    <div class="flex-1 flex flex-col p-4 gap-3 min-h-[300px]">
+      <div id="instructions-box" class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-2xl text-xs leading-relaxed">
+        <strong>Cómo experimentar:</strong> Ajusta las porciones con los botones o <strong>¡haz clic directamente sobre las pizzas!</strong> para pintar las porciones deseadas táctilmente. Compara si ambas fracciones representan exactamente la misma área (Equivalentes).
+      </div>
+
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+        <!-- Pizza A -->
+        <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-3xl p-4 h-full relative">
+          <span class="text-xs font-extrabold text-blue-500 tracking-wider uppercase mb-2">Fracción A (Azul)</span>
+          <div id="pizza-container-a" class="flex items-center justify-center h-36"></div>
+          <div class="mt-4 flex flex-col items-center gap-1">
+            <div class="flex flex-col items-center leading-none border-t border-b-2 border-slate-800 px-3 py-1 font-black text-2xl text-blue-600">
+              <span id="num-a-lbl">2</span>
+              <div class="w-8 h-[2px] bg-slate-800 my-0.5"></div>
+              <span id="den-a-lbl">4</span>
+            </div>
+            <span class="text-[11px] font-mono font-bold text-slate-400">Decimal: <span id="dec-a-lbl">0.500</span></span>
+          </div>
+        </div>
+
+        <!-- Pizza B -->
+        <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-3xl p-4 h-full relative">
+          <span class="text-xs font-extrabold text-pink-500 tracking-wider uppercase mb-2">Fracción B (Rosa)</span>
+          <div id="pizza-container-b" class="flex items-center justify-center h-36"></div>
+          <div class="mt-4 flex flex-col items-center gap-1">
+            <div class="flex flex-col items-center leading-none border-t border-b-2 border-slate-800 px-3 py-1 font-black text-2xl text-pink-600">
+              <span id="num-b-lbl">1</span>
+              <div class="w-8 h-[2px] bg-slate-800 my-0.5"></div>
+              <span id="den-b-lbl">2</span>
+            </div>
+            <span class="text-[11px] font-mono font-bold text-slate-400">Decimal: <span id="dec-b-lbl">0.500</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Equality indicator hud -->
+      <div class="p-3 bg-slate-50 border rounded-3xl text-center flex flex-col items-center justify-center gap-1">
+        <span class="text-[10px] font-extrabold text-slate-400 tracking-wider uppercase">Estado de Equivalencia</span>
+        <div id="equality-status" class="font-extrabold text-base flex items-center gap-2"></div>
+        <div id="challenge-badge" class="hidden mt-2 bg-emerald-500 text-white px-6 py-1.5 rounded-full text-xs font-black shadow animate-pulse">
+          ⭐ ¡RETO COMPLETADO CON ÉXITO! ⭐
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar controls -->
+    <div class="w-full md:w-72 bg-slate-50 border-t md:border-t-0 md:border-l p-4 flex flex-col gap-4">
+      <span class="font-extrabold text-xs text-slate-700 border-b pb-2">⚙️ Controles de Fracción</span>
+      
+      <!-- Fraction A knobs -->
+      <div class="space-y-2 border-b pb-3">
+        <div class="flex items-center gap-1.5 text-slate-800 font-extrabold text-xs">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+          Ajustes Fracción A (Azul)
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-semibold text-slate-500">Numerador:</span>
+          <div class="flex items-center gap-1">
+            <button onclick="changeNum('a', -1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">-</button>
+            <span id="lbl-ctrl-num-a" class="w-6 text-center font-bold">2</span>
+            <button onclick="changeNum('a', 1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">+</button>
+          </div>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-semibold text-slate-500">Denominador:</span>
+          <div class="flex items-center gap-1">
+            <button onclick="changeDen('a', -1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">-</button>
+            <span id="lbl-ctrl-den-a" class="w-6 text-center font-bold">4</span>
+            <button onclick="changeDen('a', 1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fraction B knobs -->
+      <div class="space-y-2 border-b pb-3">
+        <div class="flex items-center gap-1.5 text-slate-800 font-extrabold text-xs">
+          <span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+          Ajustes Fracción B (Rosa)
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-semibold text-slate-500">Numerador:</span>
+          <div class="flex items-center gap-1">
+            <button onclick="changeNum('b', -1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">-</button>
+            <span id="lbl-ctrl-num-b" class="w-6 text-center font-bold">1</span>
+            <button onclick="changeNum('b', 1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">+</button>
+          </div>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-semibold text-slate-500">Denominador:</span>
+          <div class="flex items-center gap-1">
+            <button onclick="changeDen('b', -1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">-</button>
+            <span id="lbl-ctrl-den-b" class="w-6 text-center font-bold">2</span>
+            <button onclick="changeDen('b', 1)" class="w-6 h-6 border rounded-lg bg-white hover:bg-slate-100 font-bold text-xs">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Challenges -->
+      <div class="space-y-2">
+        <span class="font-bold text-[11px] text-slate-500 block">🏆 Retos de Fracciones</span>
+        <div class="flex flex-col gap-2">
+          <button onclick="selectChallenge(0)" id="btn-chal-0" class="w-full text-left p-2 bg-amber-50 border border-amber-300 rounded-xl text-[10px] font-bold text-amber-900">
+            <strong>🍕 El Medio Clásico</strong><br/>
+            <span class="text-slate-500 font-normal">Iguala Fracción A en 1/2 y Fracción B con denominador 6.</span>
+          </button>
+          <button onclick="selectChallenge(1)" id="btn-chal-1" class="w-full text-left p-2 bg-white border rounded-xl text-[10px] text-slate-600 hover:bg-slate-100">
+            <strong>🍰 El Desafío del Tercio</strong><br/>
+            <span class="text-slate-500 font-normal">Ajusta la Fracción A a 1/3 e iguálala en B con denominador 9.</span>
+          </button>
+          <button onclick="selectChallenge(2)" id="btn-chal-2" class="w-full text-left p-2 bg-white border rounded-xl text-[10px] text-slate-600 hover:bg-slate-100">
+            <strong>📈 Simplificación Extrema</strong><br/>
+            <span class="text-slate-500 font-normal">Coloca la Fracción A en 4/12 y simplifícala al máximo en B.</span>
+          </button>
+        </div>
+      </div>
+
+      <button onclick="resetSim()" class="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition flex justify-center items-center gap-1">Reajustar todo</button>
+    </div>
+  </div>
+
+  <div id="theory-box" class="hidden p-4 bg-amber-50 text-xs text-slate-600 border-t">
+    Una fracción representa una parte de la unidad. El numerador indica las partes tomadas y el denominador el total de subdivisiones. Dos fracciones son equivalentes si representan exactamente la misma área del círculo.
+  </div>
+</div>
+
+      </div>
+
+      <script>
+        
+let numA = 2;
+let denA = 4;
+let numB = 1;
+let denB = 2;
+let activeChallengeIdx = 0;
+let soundEnabled = true;
+
+function playTone(freq, duration) {
+  if (!soundEnabled) return;
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.08, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + duration);
+  } catch(e) {}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sonido' : '🔇 Silencio';
+}
+
+function toggleTheory() {
+  document.getElementById('theory-box').classList.toggle('hidden');
+}
+
+function toggleInstructions() {
+  document.getElementById('instructions-box').classList.toggle('hidden');
+}
+
+function drawPizza(num, den, containerId, isA) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  let svgHtml = `<svg width="140" height="140" viewBox="0 0 120 120" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.05)); overflow: visible; cursor: pointer;">`;
+  const cx = 60, cy = 60, r = 50;
+
+  for (let i = 0; i < den; i++) {
+    const startAngle = (i * 360 / den) - 90;
+    const endAngle = ((i + 1) * 360 / den) - 90;
+    const radStart = startAngle * Math.PI / 180;
+    const radEnd = endAngle * Math.PI / 180;
+    const x1 = cx + r * Math.cos(radStart);
+    const y1 = cy + r * Math.sin(radStart);
+    const x2 = cx + r * Math.cos(radEnd);
+    const y2 = cy + r * Math.sin(radEnd);
+    const largeArc = 360 / den > 180 ? 1 : 0;
+    const filled = i < num;
+    const color = filled ? (isA ? '#3b82f6' : '#ec4899') : '#f1f5f9';
+
+    svgHtml += `
+      <path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z"
+            fill="${color}" stroke="#94a3b8" stroke-width="1.5"
+            onclick="pizzaClick('${isA ? 'a' : 'b'}', ${i})"/>
+    `;
+  }
+  svgHtml += `</svg>`;
+  container.innerHTML = svgHtml;
+}
+
+function pizzaClick(frac, index) {
+  playTone(600, 0.05);
+  if (frac === 'a') {
+    if (index < numA) numA = index;
+    else numA = index + 1;
+  } else {
+    if (index < numB) numB = index;
+    else numB = index + 1;
+  }
+  updateDisplay();
+}
+
+function changeNum(frac, delta) {
+  playTone(500, 0.05);
+  if (frac === 'a') {
+    numA = Math.max(0, Math.min(denA, numA + delta));
+  } else {
+    numB = Math.max(0, Math.min(denB, numB + delta));
+  }
+  updateDisplay();
+}
+
+function changeDen(frac, delta) {
+  playTone(550, 0.05);
+  if (frac === 'a') {
+    denA = Math.max(1, Math.min(12, denA + delta));
+    if (numA > denA) numA = denA;
+  } else {
+    denB = Math.max(1, Math.min(12, denB + delta));
+    if (numB > denB) numB = denB;
+  }
+  updateDisplay();
+}
+
+function selectChallenge(idx) {
+  activeChallengeIdx = idx;
+  playTone(650, 0.1);
+  for (let i = 0; i < 3; i++) {
+    const btn = document.getElementById('btn-chal-' + i);
+    if (btn) {
+      if (i === idx) {
+        btn.className = "w-full text-left p-2 bg-amber-100 border border-amber-300 rounded-xl text-[10px] font-bold text-amber-900";
+      } else {
+        btn.className = "w-full text-left p-2 bg-white border rounded-xl text-[10px] text-slate-600 hover:bg-slate-100";
+      }
+    }
+  }
+
+  if (idx === 0) {
+    numA = 1; denA = 2;
+    numB = 2; denB = 6;
+  } else if (idx === 1) {
+    numA = 1; denA = 3;
+    numB = 2; denB = 9;
+  } else if (idx === 2) {
+    numA = 4; denA = 12;
+    numB = 3; denB = 6;
+  }
+  updateDisplay();
+}
+
+function resetSim() {
+  selectChallenge(0);
+}
+
+function updateDisplay() {
+  document.getElementById('num-a-lbl').innerText = numA;
+  document.getElementById('den-a-lbl').innerText = denA;
+  document.getElementById('num-b-lbl').innerText = numB;
+  document.getElementById('den-b-lbl').innerText = denB;
+
+  document.getElementById('lbl-ctrl-num-a').innerText = numA;
+  document.getElementById('lbl-ctrl-den-a').innerText = denA;
+  document.getElementById('lbl-ctrl-num-b').innerText = numB;
+  document.getElementById('lbl-ctrl-den-b').innerText = denB;
+
+  const valA = numA / denA;
+  const valB = numB / denB;
+
+  document.getElementById('dec-a-lbl').innerText = valA.toFixed(3);
+  document.getElementById('dec-b-lbl').innerText = valB.toFixed(3);
+
+  drawPizza(numA, denA, 'pizza-container-a', true);
+  drawPizza(numB, denB, 'pizza-container-b', false);
+
+  const areEquivalent = Math.abs(valA - valB) < 0.0001;
+  const eqStatus = document.getElementById('equality-status');
+  if (areEquivalent) {
+    eqStatus.innerHTML = `<span class="text-emerald-600">🎉 ¡EQUIVALENTES! (${numA}/${denA} = ${numB}/${denB})</span>`;
+    playTone(880, 0.05);
+  } else {
+    eqStatus.innerHTML = `<span class="text-rose-500">No son equivalentes (${numA}/${denA} ≠ ${numB}/${denB})</span>`;
+  }
+
+  let chalSuccess = false;
+  if (activeChallengeIdx === 0 && valA === 0.5 && valB === 0.5 && denB === 6) chalSuccess = true;
+  else if (activeChallengeIdx === 1 && Math.abs(valA - 0.333) < 0.01 && Math.abs(valB - 0.333) < 0.01 && denB === 9) chalSuccess = true;
+  else if (activeChallengeIdx === 2 && numA === 4 && denA === 12 && numB === 1 && denB === 3) chalSuccess = true;
+
+  const badge = document.getElementById('challenge-badge');
+  if (chalSuccess) {
+    badge.classList.remove('hidden');
+    playTone(950, 0.3);
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+setTimeout(resetSim, 100);
+
+      </script>
+    </body>
+    </html>
+  

@@ -1,0 +1,320 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Soporte Vital RCP - Simulador Educativo Offline</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+          font-family: 'Nunito', sans-serif;
+        }
+      </style>
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ['Nunito', 'sans-serif'],
+              }
+            }
+          }
+        }
+      </script>
+    </head>
+    <body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-4xl h-[600px]">
+        
+<div class="flex flex-col h-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 p-4 flex flex-wrap justify-between items-center text-white gap-2">
+    <div class="flex items-center gap-2">
+      <span class="p-2 bg-white/20 rounded-xl font-bold">❤️</span>
+      <div>
+        <h2 class="font-extrabold text-base tracking-tight leading-none">Soporte Vital RCP</h2>
+        <p class="text-[10px] text-white/90">Maniquí interactivo de reanimación y ritmo de compresión</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleSound()" id="sound-btn" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">🔊 Sonido</button>
+      <button onclick="toggleTheory()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">📖 Teoría</button>
+      <button onclick="toggleInstructions()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs transition">💡 Ayuda</button>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-auto">
+    <div class="flex-1 flex flex-col p-4 gap-3 min-h-[300px]">
+      <div id="instructions-box" class="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-2xl text-xs leading-relaxed">
+        <strong>Cómo practicar:</strong> Activa el "Metrónomo Guía" (110 latidos por minuto) para sincronizarte. <strong>¡Presiona rítmicamente el gran corazón central!</strong> de forma constante. Completa los objetivos clínicos del reto seleccionado.
+      </div>
+
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+        <!-- Manikin Target chest circle -->
+        <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-3xl p-6 h-full relative min-h-[220px]">
+          <span class="text-[10px] font-extrabold text-slate-400 tracking-wider uppercase mb-3">Zona de Compresión Esternal</span>
+          
+          <button id="compress-dummy" onclick="doCompression()" class="w-32 h-32 rounded-full border-4 bg-white border-rose-300 hover:border-rose-400 active:scale-90 shadow-md flex flex-col items-center justify-center relative cursor-pointer outline-none select-none transition-transform duration-75">
+            <span class="text-4xl transition-transform duration-75" id="heart-emoji">❤️</span>
+            <span class="text-[9px] font-black tracking-wider uppercase text-slate-500 mt-2">Presionar aquí</span>
+          </button>
+
+          <div class="mt-4 flex justify-center gap-4 text-xs font-bold text-slate-600">
+            <span>👊 Compresiones: <span id="comp-count" class="text-rose-600 text-sm">0</span></span>
+            <span id="breath-cnt-hud" class="hidden">🌬️ Insuflaciones: <span id="breath-count" class="text-sky-600 text-sm">0</span>/2</span>
+          </div>
+        </div>
+
+        <!-- Feedback Metrics indicators -->
+        <div class="flex flex-col justify-center items-center bg-slate-50 border border-slate-200 rounded-3xl p-6 h-full text-center gap-4">
+          <span class="text-xs font-bold text-slate-500 tracking-wider uppercase">Indicadores Clínicos de Calidad</span>
+          
+          <div class="bg-white px-5 py-3 rounded-2xl border w-full">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
+              <span>Precisión del Ritmo:</span>
+              <span id="accuracy-lbl" class="text-rose-600 text-sm">100%</span>
+            </div>
+            <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div id="accuracy-bar" style="width: 100%" class="h-full bg-rose-500 rounded-full transition-all"></div>
+            </div>
+          </div>
+
+          <div class="bg-white border rounded-2xl p-4 w-full flex flex-col items-center">
+            <span class="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider mb-1">Estado de Compresión</span>
+            <div id="bpm-feedback" class="h-10 flex items-center justify-center font-black text-slate-400 text-xs">Comienza a presionar...</div>
+          </div>
+
+          <button id="breath-btn" onclick="giveBreath()" class="hidden w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-extrabold text-xs items-center justify-center gap-1.5 shadow animate-bounce">Dar Insuflación de Aire</button>
+
+          <div id="challenge-badge" class="hidden bg-emerald-500 text-white p-2.5 w-full rounded-xl text-xs font-black shadow animate-pulse">
+            ⭐ ¡RETO RCP COMPLETADO CON ÉXITO! ⭐
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls row bottom -->
+      <div class="flex flex-wrap items-center justify-between bg-slate-50 border p-3 rounded-2xl gap-2">
+        <div class="flex items-center gap-2">
+          <button onclick="toggleMetronome()" id="metro-btn" class="px-4 py-2.5 rounded-xl text-xs font-black transition border bg-white text-slate-700">Activar Metrónomo Guía</button>
+          <button onclick="resetSim()" class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs transition">Reiniciar Registro</button>
+        </div>
+        <div class="text-[10px] text-slate-400 font-mono">AHA 2025: 100-120 bpm</div>
+      </div>
+    </div>
+
+    <!-- Sidebar controls -->
+    <div class="w-full md:w-72 bg-slate-50 border-t md:border-t-0 md:border-l p-4 flex flex-col gap-4">
+      <span class="font-extrabold text-xs text-slate-700 border-b pb-2">⚙️ Nivel de Práctica RCP</span>
+      <div class="flex flex-col gap-2">
+        <button onclick="selectChallenge(0)" id="btn-chal-0" class="w-full text-left p-2.5 rounded-xl border text-xs bg-amber-100 border-amber-300 text-amber-900 font-semibold">
+          <p class="font-extrabold mb-0.5">💓 Ritmo Constante</p>
+          <p class="text-[10px] leading-tight text-slate-500">Logra 15 compresiones con ritmo excelente (100-120 bpm).</p>
+        </button>
+        <button onclick="selectChallenge(1)" id="btn-chal-1" class="w-full text-left p-2.5 rounded-xl border text-xs bg-white text-slate-600 hover:bg-slate-100">
+          <p class="font-extrabold mb-0.5">🚑 Ciclo Médico Completo (30:2)</p>
+          <p class="text-[10px] leading-tight text-slate-500">Completa 30 compresiones rítmicas seguidas de 2 insuflaciones.</p>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="theory-box" class="hidden p-4 bg-amber-50 text-xs text-slate-600 border-t">
+    La Reanimación Cardiopulmonar (RCP) es primordial para circular sangre oxigenada mecánicamente al cerebro y órganos vitales. Se recomienda comprimir entre 100 y 120 latidos por minuto (AHA standard).
+  </div>
+</div>
+
+      </div>
+
+      <script>
+        
+let compressions = 0;
+let breaths = 0;
+let accuracy = 100;
+let phase = 'compressions'; // compressions, breaths
+let lastCompressTime = null;
+let accuracyQueue = [];
+
+let activeChallengeIdx = 0;
+let metronomeActive = false;
+let metronomeInterval = null;
+let soundEnabled = true;
+
+function playTone(freq, duration) {
+  if (!soundEnabled) return;
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.08, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + duration);
+  } catch(e) {}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sonido' : '🔇 Silencio';
+}
+
+function toggleTheory() {
+  document.getElementById('theory-box').classList.toggle('hidden');
+}
+
+function toggleInstructions() {
+  document.getElementById('instructions-box').classList.toggle('hidden');
+}
+
+function toggleMetronome() {
+  metronomeActive = !metronomeActive;
+  playTone(600, 0.05);
+  const btn = document.getElementById('metro-btn');
+
+  if (metronomeActive) {
+    btn.className = "px-4 py-2.5 rounded-xl text-xs font-black transition border bg-rose-600 text-white";
+    btn.innerText = "Desactivar Metrónomo";
+    metronomeInterval = setInterval(() => {
+      playTone(500, 0.05);
+    }, 545);
+  } else {
+    btn.className = "px-4 py-2.5 rounded-xl text-xs font-black transition border bg-white text-slate-700";
+    btn.innerText = "Activar Metrónomo Guía";
+    if (metronomeInterval) clearInterval(metronomeInterval);
+  }
+}
+
+function doCompression() {
+  if (phase !== 'compressions') return;
+  
+  const now = performance.now();
+  playTone(400, 0.05);
+
+  const emoji = document.getElementById('heart-emoji');
+  emoji.style.transform = "scale(1.25)";
+  setTimeout(() => emoji.style.transform = "scale(1)", 80);
+
+  if (lastCompressTime !== null) {
+    const diff = now - lastCompressTime;
+    const bpm = 60000 / diff;
+    let isBpmGood = false;
+
+    const feedback = document.getElementById('bpm-feedback');
+    if (bpm >= 100 && bpm <= 120) {
+      feedback.innerHTML = `<span class="text-emerald-500 font-sans">💚 ¡RITMO EXCELENTE! (${Math.round(bpm)} bpm)</span>`;
+      isBpmGood = true;
+    } else if (bpm > 120) {
+      feedback.innerHTML = `<span class="text-amber-500 font-sans">⚠️ ¡DEMASIADO RÁPIDO! (${Math.round(bpm)} bpm)</span>`;
+    } else {
+      feedback.innerHTML = `<span class="text-amber-500 font-sans">⚠️ ¡DEMASIADO LENTO! (${Math.round(bpm)} bpm)</span>`;
+    }
+
+    accuracyQueue.push(isBpmGood ? 1 : 0);
+    if (accuracyQueue.length > 20) accuracyQueue.shift();
+    const goods = accuracyQueue.filter(v => v === 1).length;
+    accuracy = Math.round((goods / accuracyQueue.length) * 100);
+    
+    document.getElementById('accuracy-lbl').innerText = accuracy + '%';
+    document.getElementById('accuracy-bar').style.width = accuracy + '%';
+  } else {
+    document.getElementById('bpm-feedback').innerText = 'Siguiendo el ritmo...';
+  }
+
+  lastCompressTime = now;
+  compressions++;
+  document.getElementById('comp-count').innerText = compressions;
+
+  if (activeChallengeIdx === 1 && compressions >= 30) {
+    phase = 'breaths';
+    lastCompressTime = null;
+    document.getElementById('compress-dummy').setAttribute('disabled', 'true');
+    document.getElementById('compress-dummy').classList.add('opacity-50');
+    document.getElementById('breath-btn').classList.remove('hidden');
+    document.getElementById('breath-btn').classList.add('flex');
+  }
+
+  checkChallenges();
+}
+
+function giveBreath() {
+  if (phase !== 'breaths') return;
+  playTone(300, 0.15);
+  setTimeout(() => playTone(600, 0.1), 100);
+  
+  breaths++;
+  document.getElementById('breath-count').innerText = breaths;
+
+  if (breaths >= 2) {
+    checkChallenges();
+  }
+}
+
+function selectChallenge(idx) {
+  activeChallengeIdx = idx;
+  playTone(550, 0.1);
+  for (let i = 0; i < 2; i++) {
+    const btn = document.getElementById('btn-chal-' + i);
+    if (btn) {
+      if (i === idx) {
+        btn.className = "w-full text-left p-2.5 rounded-xl border text-xs bg-amber-100 border-amber-300 text-amber-900 font-semibold";
+      } else {
+        btn.className = "w-full text-left p-2.5 rounded-xl border text-xs bg-white text-slate-600 hover:bg-slate-100";
+      }
+    }
+  }
+
+  const breathHud = document.getElementById('breath-cnt-hud');
+  if (idx === 1) {
+    breathHud.classList.remove('hidden');
+  } else {
+    breathHud.classList.add('hidden');
+  }
+
+  resetSim();
+}
+
+function resetSim() {
+  compressions = 0;
+  breaths = 0;
+  accuracy = 100;
+  phase = 'compressions';
+  lastCompressTime = null;
+  accuracyQueue = [];
+
+  document.getElementById('comp-count').innerText = '0';
+  document.getElementById('breath-count').innerText = '0';
+  document.getElementById('accuracy-lbl').innerText = '100%';
+  document.getElementById('accuracy-bar').style.width = '100%';
+  document.getElementById('bpm-feedback').innerText = 'Comienza a presionar...';
+  document.getElementById('challenge-badge').classList.add('hidden');
+
+  const dummy = document.getElementById('compress-dummy');
+  dummy.removeAttribute('disabled');
+  dummy.classList.remove('opacity-50');
+
+  const breathBtn = document.getElementById('breath-btn');
+  breathBtn.classList.add('hidden');
+  breathBtn.classList.remove('flex');
+}
+
+function checkChallenges() {
+  let success = false;
+  if (activeChallengeIdx === 0 && compressions >= 15 && accuracy >= 85) success = true;
+  else if (activeChallengeIdx === 1 && compressions >= 30 && breaths >= 2 && accuracy >= 80) success = true;
+
+  if (success) {
+    document.getElementById('challenge-badge').classList.remove('hidden');
+    playTone(1000, 0.4);
+  }
+}
+
+selectChallenge(0);
+
+      </script>
+    </body>
+    </html>
+  
