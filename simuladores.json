@@ -1,11 +1,5 @@
 [
   {
-    "titulo": "SimLab",
-    "categoria": "Simuladores",
-    "icono": "🧪",
-    "archivo": "simlab.html"
-  },
-  {
     "titulo": "Lanzamiento de Proyectiles",
     "categoria": "Física",
     "icono": "🏹",
@@ -52,5 +46,11 @@
     "categoria": "Biología",
     "icono": "🧬",
     "archivo": "simulador_punnett.html"
+  },
+    {
+    "titulo": "SimLab",
+    "categoria": "Otros",
+    "icono": "📒 ",
+    "archivo": "simlab.html"
   }
 ]
