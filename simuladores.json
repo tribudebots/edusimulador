@@ -42,6 +42,18 @@
     "archivo": "simulador_cpr.html"
   },
   {
+    "titulo": "Ecuacion de los gases",
+    "categoria": "Quimica",
+    "icono": "🎈",
+    "archivo": "gas.html"
+  },
+  {
+    "titulo": "Pendulo",
+    "categoria": "Fisico",
+    "icono": "¦",
+    "archivo": "pendulo.html"
+  },
+  {
     "titulo": "Cuadros de Punnett",
     "categoria": "Biología",
     "icono": "🧬",
