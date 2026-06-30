@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Gas Ideal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
+  --accent:#10b981;--accent2:#06b6d4;--text:#e2e8f0;--muted:#64748b;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;padding:1.5rem;}
+header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:#fff;flex-shrink:0}
+header h1{font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
+.ctrl-row{display:flex;flex-wrap:wrap;gap:.7rem;background:var(--surface);border-radius:12px;padding:.875rem;border:1px solid var(--border);margin-bottom:.75rem}
+.ctrl-group{display:flex;flex-direction:column;gap:3px;min-width:120px}
+.ctrl-group label{font-size:.67rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase}
+.ctrl-group input[type=range]{accent-color:var(--accent);width:100%}
+.ctrl-group .val{font-size:.78rem;font-family:'Space Mono',monospace;color:var(--accent2)}
+.btn{padding:.5rem 1.1rem;border:none;border-radius:8px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.82}
+.btn-green{background:#10b981}
+.btn-gray{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.sim-inner{position:relative;margin-bottom:.75rem}
+canvas.sim-canvas{border-radius:12px;border:1.5px solid var(--border);background:#000010;width:100%;display:block}
+.data-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.data-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem}
+.data-vals{display:flex;flex-wrap:wrap;gap:.75rem}
+.dv-label{font-size:.62rem;color:#475569;font-family:'Space Mono',monospace;text-transform:uppercase}
+.dv-val{font-family:'Space Mono',monospace;font-weight:700;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">💨</div>
+  <div><h1>Simulador de Gas Ideal (PVT)</h1></div>
+</header>
+
+<main>
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Temperatura (K)</label><input type="range" id="g-T" min="100" max="2000" value="300" oninput="pv('g-T-v',this.value+' K');updateGasParticles()"><span class="val" id="g-T-v">300 K</span></div>
+    <div class="ctrl-group"><label>Nº moléculas</label><input type="range" id="g-N" min="10" max="150" value="60" step="5" oninput="pv('g-N-v',this.value);updateGasParticles()"><span class="val" id="g-N-v">60</span></div>
+    <div class="ctrl-group"><label>Volumen relativo</label><input type="range" id="g-V" min="0.4" max="1.6" value="1" step="0.05" oninput="pv('g-V-v',this.value)"><span class="val" id="g-V-v">1</span></div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem">
+      <button class="btn btn-green" onclick="startGas()">▶ Iniciar</button>
+      <button class="btn btn-gray"  onclick="stopGas()">■ Parar</button>
+    </div>
+  </div>
+  <div class="sim-inner"><canvas id="gas-canvas" class="sim-canvas" height="340"></canvas></div>
+  <div class="data-row">
+    <div class="data-box"><div class="data-vals">
+      <div><div class="dv-label">Presión rel.</div><div class="dv-val" id="g-P" style="color:#10b981">—</div></div>
+      <div><div class="dv-label">Vel. media</div><div class="dv-val" id="g-v" style="color:#06b6d4">—</div></div>
+      <div><div class="dv-label">PV/NkT</div><div class="dv-val" id="g-pvnkt" style="color:#a78bfa">—</div></div>
+    </div></div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Ley del Gas Ideal</strong><br>
+      PV = NkT. Al aumentar T, las partículas se mueven más rápido y golpean las paredes con más frecuencia, aumentando la presión.
+    </div>
+  </div>
+</main>
+
+<script>
+function pv(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+let _raf = null;
+window._gasParticles = [];
+
+function initGasParticles(){
+  const c=document.getElementById('gas-canvas'); if(!c) return;
+  const T=+document.getElementById('g-T').value, N=+document.getElementById('g-N').value;
+  const V=+document.getElementById('g-V').value, speed=Math.sqrt(T/300)*3;
+  const W=c.width,H=c.height,cw=W*.6*Math.sqrt(V),ch=H*.7*Math.sqrt(V);
+  const x1=W/2-cw/2,x2=W/2+cw/2,y1=H/2-ch/2,y2=H/2+ch/2;
+  window._gasParticles=Array.from({length:N},()=>({
+    x:x1+Math.random()*(x2-x1),y:y1+Math.random()*(y2-y1),
+    vx:(Math.random()-.5)*speed*2,vy:(Math.random()-.5)*speed*2,
+    color:`hsl(${Math.random()*60+180},80%,60%)`
+  }));
+}
+
+function updateGasParticles(){
+  const N=+document.getElementById('g-N').value;
+  const T=+document.getElementById('g-T').value, speed=Math.sqrt(T/300)*3;
+  const ps=window._gasParticles;
+  const c=document.getElementById('gas-canvas'); if(!c) return;
+  const V=+document.getElementById('g-V').value;
+  const W=c.width,H=c.height,cw=W*.6*Math.sqrt(V),ch=H*.7*Math.sqrt(V);
+  const x1=W/2-cw/2,x2=W/2+cw/2,y1=H/2-ch/2,y2=H/2+ch/2;
+  
+  while(ps.length<N) ps.push({x:x1+Math.random()*(x2-x1),y:y1+Math.random()*(y2-y1),vx:(Math.random()-.5)*speed*2,vy:(Math.random()-.5)*speed*2,color:`hsl(${Math.random()*60+180},80%,60%)`});
+  ps.forEach(p=>{const s=Math.sqrt(p.vx**2+p.vy**2)||.01;const ns=speed*(.8+Math.random()*.4);p.vx=p.vx/s*ns;p.vy=p.vy/s*ns;});
+}
+
+function stopGas(){ if(_raf){cancelAnimationFrame(_raf);_raf=null;} }
+
+function startGas(){
+  stopGas(); initGasParticles();
+  function loop(){
+    const c=document.getElementById('gas-canvas'); if(!c) return;
+    const ctx=c.getContext('2d'), W=c.width,H=c.height;
+    const T=+document.getElementById('g-T').value, N=+document.getElementById('g-N').value;
+    const V=+document.getElementById('g-V').value;
+    const cw=W*.6*Math.sqrt(V),ch=H*.7*Math.sqrt(V);
+    const x1=W/2-cw/2,x2=W/2+cw/2,y1=H/2-ch/2,y2=H/2+ch/2;
+    
+    ctx.fillStyle='#000010';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='#10b981';ctx.lineWidth=2;ctx.strokeRect(x1,y1,cw,ch);
+    ctx.fillStyle='rgba(16,185,129,.04)';ctx.fillRect(x1,y1,cw,ch);
+    
+    window._gasParticles.slice(0,N).forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<x1+4){p.x=x1+4;p.vx*=-1;}if(p.x>x2-4){p.x=x2-4;p.vx*=-1;}
+      if(p.y<y1+4){p.y=y1+4;p.vy*=-1;}if(p.y>y2-4){p.y=y2-4;p.vy*=-1;}
+      ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();
+    });
+    
+    const P=(N*T)/(V*300*60)*10;
+    const speed=Math.sqrt(T/300)*3;
+    
+    document.getElementById('g-P').textContent=P.toFixed(2)+' atm';
+    document.getElementById('g-v').textContent=(speed*60).toFixed(0)+' m/s';
+    document.getElementById('g-pvnkt').textContent=(P*V/((N/60)*T/300)).toFixed(2);
+    
+    _raf=requestAnimationFrame(loop);
+  }
+  _raf=requestAnimationFrame(loop);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const c = document.getElementById('gas-canvas');
+  c.width = c.parentElement.clientWidth;
+  window.addEventListener('resize', () => { c.width = c.parentElement.clientWidth; initGasParticles(); });
+  startGas();
+});
+</script>
+</body>
+</html>

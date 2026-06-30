@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Péndulo Simple</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
+  --accent:#3b82f6;--accent2:#06b6d4;--accent3:#8b5cf6;
+  --text:#e2e8f0;--muted:#64748b;--yellow:#f59e0b;--red:#ef4444;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;padding:1.5rem;}
+header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:#fff;flex-shrink:0}
+header h1{font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
+.ctrl-row{display:flex;flex-wrap:wrap;gap:.7rem;background:var(--surface);border-radius:12px;padding:.875rem;border:1px solid var(--border);margin-bottom:.75rem}
+.ctrl-group{display:flex;flex-direction:column;gap:3px;min-width:120px}
+.ctrl-group label{font-size:.67rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase}
+.ctrl-group input[type=range]{accent-color:var(--accent);width:100%}
+.ctrl-group .val{font-size:.78rem;font-family:'Space Mono',monospace;color:var(--accent2)}
+.ctrl-group select{background:#0f172a;border:1px solid var(--border);color:var(--text);padding:5px 6px;border-radius:6px;font-size:.82rem;font-family:'Space Grotesk',sans-serif}
+.btn{padding:.5rem 1.1rem;border:none;border-radius:8px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.82}
+.btn-blue{background:#2563eb}
+.btn-gray{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.sim-inner{position:relative;margin-bottom:.75rem}
+canvas.sim-canvas{border-radius:12px;border:1.5px solid var(--border);background:#000010;width:100%;display:block}
+.data-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.data-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem}
+.data-vals{display:flex;flex-wrap:wrap;gap:.75rem}
+.dv-label{font-size:.62rem;color:#475569;font-family:'Space Mono',monospace;text-transform:uppercase}
+.dv-val{font-family:'Space Mono',monospace;font-weight:700;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚖️</div>
+  <div><h1>Simulador de Péndulo Simple</h1></div>
+</header>
+
+<main>
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Longitud (m)</label><input type="range" id="pen-L" min="0.3" max="3" value="1.5" step="0.1" oninput="pv('pen-L-v',this.value+' m')"><span class="val" id="pen-L-v">1.5 m</span></div>
+    <div class="ctrl-group"><label>Ángulo inicial (°)</label><input type="range" id="pen-a" min="5" max="80" value="30" oninput="pv('pen-a-v',this.value+'°')"><span class="val" id="pen-a-v">30°</span></div>
+    <div class="ctrl-group"><label>Gravedad</label>
+      <select id="pen-g"><option value="9.8">Tierra 9.8</option><option value="1.62">Luna 1.62</option><option value="3.72">Marte 3.72</option><option value="24.8">Júpiter 24.8</option></select>
+    </div>
+    <div class="ctrl-group"><label>Amortiguación</label><input type="range" id="pen-d" min="0" max="0.1" value="0.005" step="0.001" oninput="pv('pen-d-v',this.value)"><span class="val" id="pen-d-v">0.005</span></div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem">
+      <button class="btn btn-blue" onclick="startPen()">▶ Iniciar</button>
+      <button class="btn btn-gray" onclick="stopPen()">■ Parar</button>
+    </div>
+  </div>
+  <div class="sim-inner"><canvas id="pen-canvas" class="sim-canvas" height="380"></canvas></div>
+  <div class="data-row">
+    <div class="data-box">
+      <div class="data-vals">
+        <div><div class="dv-label">Período (s)</div><div class="dv-val" id="pen-T" style="color:#3b82f6">—</div></div>
+        <div><div class="dv-label">Ángulo</div><div class="dv-val" id="pen-ang" style="color:#06b6d4">—</div></div>
+        <div><div class="dv-label">E. Cinética</div><div class="dv-val" id="pen-ek" style="color:#4ade80">—</div></div>
+        <div><div class="dv-label">E. Potencial</div><div class="dv-val" id="pen-ep" style="color:#f59e0b">—</div></div>
+      </div>
+    </div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Péndulo Simple</strong><br>
+      El período T = 2π√(L/g) depende solo de la longitud y la gravedad, no de la masa. La energía oscila entre cinética (en el centro) y potencial (en los extremos).
+    </div>
+  </div>
+</main>
+
+<script>
+function pv(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+let _raf = null, _penTheta = 30 * Math.PI / 180, _penOmega = 0;
+
+function drawPen(theta){
+  const c=document.getElementById('pen-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width,H=c.height;
+  const L=+document.getElementById('pen-L').value;
+  ctx.fillStyle='#000010';ctx.fillRect(0,0,W,H);
+  const cx=W/2,cy=70,ppm=Math.min(180,(H-100)/(L+.5));
+  const bx=cx+Math.sin(theta)*L*ppm, by=cy+Math.cos(theta)*L*ppm;
+  ctx.strokeStyle='#64748b';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx-40,cy);ctx.lineTo(cx+40,cy);ctx.stroke();
+  ctx.fillStyle='#374151';ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(bx,by);ctx.stroke();
+  const gr=ctx.createRadialGradient(bx-5,by-5,2,bx,by,22);gr.addColorStop(0,'#93c5fd');gr.addColorStop(1,'#1e40af');
+  ctx.beginPath();ctx.arc(bx,by,22,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+  
+  const g=+document.getElementById('pen-g').value;
+  const ek=.5*(_penOmega*L)**2, ep=g*L*(1-Math.cos(theta));
+  const maxE=g*L*(1-Math.cos(+document.getElementById('pen-a').value*Math.PI/180))+.01;
+  ctx.fillStyle='rgba(30,42,68,.7)';ctx.fillRect(W-70,20,50,H-50);
+  ctx.fillStyle='#4ade80';ctx.fillRect(W-70, 20+(1-ek/maxE)*(H-50), 22, (ek/maxE)*(H-50));
+  ctx.fillStyle='#f59e0b';ctx.fillRect(W-46, 20+(1-ep/maxE)*(H-50), 22, (ep/maxE)*(H-50));
+  ctx.fillStyle='#94a3b8';ctx.font='10px monospace';ctx.textAlign='center';
+  ctx.fillText('Ec',W-59,H-22);ctx.fillText('Ep',W-35,H-22);
+}
+
+function startPen(){
+  stopPen();
+  _penTheta=+document.getElementById('pen-a').value*Math.PI/180; _penOmega=0;
+  function loop(){
+    const L=+document.getElementById('pen-L').value;
+    const g=+document.getElementById('pen-g').value;
+    const d=+document.getElementById('pen-d').value;
+    const dt=.016;
+    _penOmega+=-(g/L)*Math.sin(_penTheta)*dt - d*_penOmega*dt;
+    _penTheta+=_penOmega*dt;
+    drawPen(_penTheta);
+    const T=2*Math.PI*Math.sqrt(L/g);
+    const ek=.5*(_penOmega*L)**2, ep=g*L*(1-Math.cos(_penTheta));
+    
+    document.getElementById('pen-T').textContent=T.toFixed(3)+' s';
+    document.getElementById('pen-ang').textContent=(_penTheta*180/Math.PI).toFixed(1)+'°';
+    document.getElementById('pen-ek').textContent=ek.toFixed(3)+' J';
+    document.getElementById('pen-ep').textContent=ep.toFixed(3)+' J';
+    
+    _raf=requestAnimationFrame(loop);
+  }
+  _raf=requestAnimationFrame(loop);
+}
+
+function stopPen(){ if(_raf){cancelAnimationFrame(_raf); _raf=null;} }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const c = document.getElementById('pen-canvas');
+  c.width = c.parentElement.clientWidth;
+  window.addEventListener('resize', () => {
+    c.width = c.parentElement.clientWidth;
+    drawPen(_penTheta);
+  });
+  drawPen(+document.getElementById('pen-a').value*Math.PI/180);
+});
+</script>
+</body>
+</html>
