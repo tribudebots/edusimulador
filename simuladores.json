@@ -48,7 +48,7 @@
     "archivo": "simulador_cpr.html"
   },
   {
-    "titulo": "Ecuacion de los gases",
+    "titulo": "Gases Ideales",
     "categoria": "Quimica",
     "icono": "🎈",
     "archivo": "gas.html"
@@ -66,7 +66,7 @@
     "archivo": "simulador_punnett.html"
   },
     {
-    "titulo": "SimLab",
+    "titulo": "Otros",
     "categoria": "Otros",
     "icono": "📒 ",
     "archivo": "simlab.html"
