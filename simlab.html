@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SimLab · Simulaciones PhET con IA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
+  --accent:#3b82f6;--accent2:#06b6d4;--accent3:#8b5cf6;
+  --text:#e2e8f0;--muted:#64748b;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+/* HEADER */
+header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0}
+header h1{font-size:1.1rem;font-weight:600;letter-spacing:-.02em}
+header p{font-size:.72rem;color:var(--muted);margin-top:1px}
+.badge{margin-left:auto;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--accent);font-size:.65rem;padding:3px 10px;border-radius:20px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+/* CATALOG */
+#catalog{padding:1.5rem}
+.intro h2{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(90deg,var(--text),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.intro p{color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s}
+.card:hover{transform:translateY(-2px)}
+.card-vis{height:100px;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#0a0e1a}
+.card-body{padding:1rem}
+.card-tag{font-size:.62rem;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:.5rem}
+.card-body h3{font-size:1rem;font-weight:600;margin-bottom:.3rem}
+.card-body p{font-size:.8rem;color:var(--muted);line-height:1.5;margin-bottom:.75rem}
+.card-btn{width:100%;padding:.52rem;border:none;border-radius:8px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.card-btn:hover{opacity:.82}
+/* SIM PANEL */
+#sim-panel{display:none;flex-direction:column}
+.sim-topbar{padding:.7rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+.sim-topbar h2{font-size:1rem;font-weight:600}
+.back-btn{margin-left:auto;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:'Space Grotesk',sans-serif}
+.back-btn:hover{color:var(--text)}
+/* CONTROLS */
+.ctrl-row{display:flex;flex-wrap:wrap;gap:.7rem;background:var(--surface);border-radius:12px;padding:.875rem;border:1px solid var(--border);margin:.75rem .75rem 0}
+.ctrl-group{display:flex;flex-direction:column;gap:3px;min-width:120px}
+.ctrl-group label{font-size:.67rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase}
+.ctrl-group input[type=range]{accent-color:var(--accent);width:100%}
+.ctrl-group .val{font-size:.78rem;font-family:'Space Mono',monospace;color:var(--accent2)}
+.ctrl-group select{background:#0f172a;border:1px solid var(--border);color:var(--text);padding:5px 6px;border-radius:6px;font-size:.82rem;font-family:'Space Grotesk',sans-serif}
+.btn{padding:.5rem 1.1rem;border:none;border-radius:8px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.82}
+.btn-blue{background:#2563eb}
+.btn-gray{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.btn-green{background:#16a34a}
+.btn-red{background:#b91c1c}
+/* MODE BAR */
+.mode-bar{display:flex;gap:.5rem;align-items:center;background:#0d1422;border-radius:10px;padding:.55rem .875rem;border:1px solid var(--border);margin:.75rem .75rem 0;flex-wrap:wrap}
+.mode-bar span{font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;margin-right:.25rem}
+.pill{padding:.42rem 1rem;border-radius:20px;font-size:.8rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:500;transition:all .15s;background:transparent}
+.pill.active-blue{border:1.5px solid var(--accent);background:rgba(59,130,246,.15);color:var(--accent);font-weight:700}
+.pill.active-yellow{border:1.5px solid var(--yellow);background:rgba(245,158,11,.15);color:var(--yellow);font-weight:700}
+.pill.inactive{border:1.5px solid var(--border);color:var(--muted)}
+#resume-btn{margin-left:auto;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+/* CANVAS WRAP */
+.canvas-wrap{position:relative;margin:.75rem .75rem 0}
+canvas.main-canvas{border-radius:12px;border:1.5px solid var(--border);background:#000010;width:100%;display:block;cursor:crosshair;transition:border-color .2s,box-shadow .2s}
+canvas.main-canvas.paused-border{border-color:var(--yellow);box-shadow:0 0 18px rgba(245,158,11,.25)}
+/* STATUS BADGE overlay */
+.status-badge{position:absolute;top:10px;left:12px;border-radius:8px;padding:5px 12px;font-size:.72rem;font-family:'Space Mono',monospace;color:#fff;display:none;align-items:center;gap:6px}
+/* LEGEND */
+.legend{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:4px;background:rgba(10,14,26,.88);border-radius:8px;padding:8px 12px;border:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:18px;height:3px;border-radius:2px}
+.legend-item span{font-size:.63rem;color:#94a3b8;font-family:'Space Mono',monospace}
+/* DATA PANELS */
+.data-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.75rem .75rem .75rem}
+.data-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem}
+.data-box-title{font-size:.67rem;color:#475569;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.55rem}
+.data-vals{display:flex;flex-wrap:wrap;gap:.75rem}
+.dv-label{font-size:.62rem;color:#475569;font-family:'Space Mono',monospace;text-transform:uppercase}
+.dv-val{font-family:'Space Mono',monospace;font-weight:700;font-size:.9rem}
+.italic-hint{color:#334155;font-size:.8rem;font-style:italic}
+/* GENERIC SIM CONTAINER */
+.sim-inner{padding:.75rem}
+/* OTHER SIMS */
+canvas.sim-canvas{border-radius:10px;border:1px solid var(--border);background:#000010;width:100%;display:block}
+/* footer */
+footer{text-align:center;padding:1.5rem;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border);margin-top:2rem}
+/* THEORY BUTTON */
+.btn-theory{background:transparent;border:1.5px solid var(--accent3);color:var(--accent3);padding:.5rem 1.1rem;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.btn-theory:hover{background:rgba(139,92,246,.15)}
+/* THEORY MODAL */
+.theory-overlay{display:none;position:fixed;inset:0;background:rgba(5,7,14,.78);backdrop-filter:blur(3px);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.theory-overlay.open{display:flex}
+.theory-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.theory-head{position:sticky;top:0;background:var(--surface);padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;border-radius:16px 16px 0 0}
+.theory-head h3{font-size:1.05rem;font-weight:700;flex:1}
+.theory-close{background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:1rem;line-height:1;flex-shrink:0}
+.theory-close:hover{color:var(--text)}
+.theory-body{padding:1.3rem 1.4rem 1.6rem;font-size:.88rem;line-height:1.65;color:var(--text)}
+.theory-body h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent2);font-family:'Space Mono',monospace;margin:1.3rem 0 .55rem}
+.theory-body h4:first-child{margin-top:0}
+.theory-body p{color:#cbd5e1;margin-bottom:.6rem}
+.theory-formula{background:#0d1422;border:1px solid var(--border);border-left:3px solid var(--accent3);border-radius:8px;padding:.7rem 1rem;margin:.6rem 0;font-family:'Space Mono',monospace;font-size:.92rem;color:#e9d5ff;overflow-x:auto}
+.theory-formula small{display:block;color:var(--muted);font-family:'Space Grotesk',sans-serif;font-size:.72rem;margin-top:.3rem}
+.theory-body ul{margin:.4rem 0 .6rem 1.1rem;color:#cbd5e1}
+.theory-body li{margin-bottom:.35rem}
+.theory-body strong{color:var(--text)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Sl</div>
+  <div>
+    <h1>SimLab · PhET con IA</h1>
+    <p>6 simulaciones interactivas generadas por IA</p>
+  </div>
+  <span class="badge">6 modelos</span>
+</header>
+
+<div id="catalog">
+  <div class="intro">
+    <h2>Aprende ciencias jugando</h2>
+    <p>Selecciona una simulación. Todos los modelos corren en tu navegador — sin instalación.</p>
+  </div>
+  <div class="grid" id="cards"></div>
+</div>
+
+<div id="sim-panel">
+  <div class="sim-topbar">
+    <span id="sim-icon" style="font-size:1.3rem"></span>
+    <h2 id="sim-title"></h2>
+    <span id="sim-tag" class="card-tag"></span>
+    <button class="back-btn" onclick="backToCatalog()">← Volver</button>
+  </div>
+  <div id="sim-content"></div>
+</div>
+
+<footer>Inspirado en PhET Interactive Simulations — University of Colorado Boulder</footer>
+
+<div class="theory-overlay" id="theory-overlay" onclick="if(event.target===this) closeTheory()">
+  <div class="theory-modal">
+    <div class="theory-head">
+      <span id="theory-icon" style="font-size:1.3rem"></span>
+      <h3 id="theory-title">Fundamento teórico</h3>
+      <button class="theory-close" onclick="closeTheory()">✕</button>
+    </div>
+    <div class="theory-body" id="theory-body"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CATALOG DATA
+// ═══════════════════════════════════════════════════
+const SIMS = [
+  {id:'projectile',title:'Movimiento Proyectil',icon:'🚀',tag:'Física',color:'#3b82f6',
+   desc:'Lanza objetos ajustando ángulo, velocidad, masa y gravedad. Congela el vuelo con un click para ver vectores de velocidad y fuerzas en tiempo real.'},
+  {id:'pendulum',title:'Péndulo Simple',icon:'⚖️',tag:'Física',color:'#3b82f6',
+   desc:'Explora el movimiento oscilatorio. Cambia longitud, gravedad y amortiguación. Mide el período y observa la energía cinética vs potencial.'},
+  {id:'gas',title:'Gas Ideal (PVT)',icon:'💨',tag:'Química',color:'#10b981',
+   desc:'Visualiza moléculas en un contenedor. Modifica presión, volumen y temperatura para ver la ley del gas ideal con partículas animadas.'},
+  {id:'standingwave',title:'Ondas Estacionarias',icon:'🎸',tag:'Física · Ondas',color:'#8b5cf6',
+   desc:'Pulsa una cuerda fija en ambos extremos y descubre los modos normales (armónicos). Ajusta la frecuencia y observa cómo aparecen nodos y antinodos.'},
+  {id:'induction',title:'Inducción Electromagnética',icon:'🧲',tag:'Electromagnetismo',color:'#f59e0b',
+   desc:'Arrastra un imán a través de una bobina y observa cómo se induce una corriente. Gráfica el flujo magnético y la FEM inducida en tiempo real (Ley de Faraday-Lenz).'},
+  {id:'solarsystem',title:'Sistema Solar',icon:'🌌',tag:'Astrofísica',color:'#eab308',
+   desc:'Simulador gravitacional. Haz clic y arrastra para lanzar planetas. Observa la gravedad interplanetaria, órbitas y colisiones con el Sol.'},
+];
+
+const cards = document.getElementById('cards');
+SIMS.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.style.setProperty('--c', s.color);
+  d.onmouseenter = () => d.style.borderColor = s.color;
+  d.onmouseleave = () => d.style.borderColor = '';
+  d.innerHTML = `
+    <div class="card-vis">${s.icon}</div>
+    <div class="card-body">
+      <span class="card-tag" style="background:${s.color}22;color:${s.color}">${s.tag}</span>
+      <h3>${s.title}</h3>
+      <p>${s.desc}</p>
+      <button class="card-btn" style="background:${s.color}" onclick="openSim('${s.id}')">▶ Ejecutar simulación</button>
+    </div>`;
+  cards.appendChild(d);
+});
+
+let currentSim = null;
+
+function openSim(id) {
+  document.getElementById('catalog').style.display = 'none';
+  const panel = document.getElementById('sim-panel');
+  panel.style.display = 'flex';
+  const s = SIMS.find(x => x.id === id);
+  document.getElementById('sim-icon').textContent = s.icon;
+  document.getElementById('sim-title').textContent = s.title;
+  const tag = document.getElementById('sim-tag');
+  tag.textContent = s.tag;
+  tag.style.cssText = `background:${s.color}22;color:${s.color};font-size:.62rem;font-family:monospace;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:4px`;
+  const content = document.getElementById('sim-content');
+  content.innerHTML = '';
+  stopAllAndDetach();
+  currentSim = id;
+  if (id === 'projectile') buildProjectile(content);
+  else if (id === 'pendulum') buildPendulum(content);
+  else if (id === 'gas')     buildGas(content);
+  else if (id === 'standingwave') buildStandingWave(content);
+  else if (id === 'induction') buildInduction(content);
+  else if (id === 'solarsystem') buildSolarSystem(content);
+}
+
+function backToCatalog() {
+  stopAllAndDetach();
+  currentSim = null;
+  document.getElementById('catalog').style.display = 'block';
+  document.getElementById('sim-panel').style.display = 'none';
+  document.getElementById('sim-content').innerHTML = '';
+}
+
+let _raf = null;
+function stopAll() {
+  if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+  if (window._gasParticles) window._gasParticles = [];
+}
+function stopAllAndDetach() {
+  stopAll();
+  window.onmousemove = null; window.onmouseup = null;
+  window.ontouchmove = null; window.ontouchend = null;
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL DE TEORÍA
+// ═══════════════════════════════════════════════════
+const THEORY = {
+  projectile: {
+    icon:'🚀',
+    html:`
+    <h4>Modelo físico</h4>
+    <p>Un proyectil se mueve bajo la acción de la gravedad y, opcionalmente, de la resistencia del aire. El movimiento se descompone en dos ejes independientes: horizontal (velocidad constante) y vertical (aceleración constante).</p>
+    <h4>Ecuaciones de movimiento</h4>
+    <div class="theory-formula">x(t) = v₀·cos(θ)·t<br>y(t) = v₀·sin(θ)·t − ½g·t²<small>Posición horizontal y vertical sin resistencia del aire</small></div>
+    <div class="theory-formula">vx(t) = v₀·cos(θ)<br>vy(t) = v₀·sin(θ) − g·t<small>Componentes de la velocidad instantánea</small></div>
+    <h4>Magnitudes derivadas</h4>
+    <div class="theory-formula">Alcance: R = v₀²·sin(2θ)/g<small>Máximo cuando θ = 45° (sin resistencia del aire)</small></div>
+    <div class="theory-formula">Altura máxima: H = (v₀·sinθ)² / (2g)<small>Se alcanza cuando vy = 0</small></div>
+    <h4>Resistencia del aire</h4>
+    <p>Cuando se activa, se añade una fuerza de arrastre proporcional al cuadrado de la velocidad: Fd = k·v², opuesta a la dirección del movimiento. Esto rompe la simetría de la parábola y reduce el alcance.</p>
+    <h4>Vectores en pantalla</h4>
+    <ul>
+      <li><strong>Vx, Vy</strong>: componentes de la velocidad instantánea</li>
+      <li><strong>|V|</strong>: magnitud de la velocidad resultante</li>
+      <li><strong>Fg</strong>: fuerza de gravedad, siempre hacia abajo (peso = mg)</li>
+      <li><strong>Fd</strong>: fuerza de arrastre, opuesta a la velocidad</li>
+    </ul>`
+  },
+  pendulum: {
+    icon:'⚖️',
+    html:`
+    <h4>Modelo físico</h4>
+    <p>El péndulo simple es una masa puntual suspendida de un hilo inextensible y sin masa. Para ángulos pequeños su movimiento es armónico simple; esta simulación usa la ecuación exacta (no lineal), válida para cualquier ángulo.</p>
+    <h4>Ecuación de movimiento</h4>
+    <div class="theory-formula">d²θ/dt² = −(g/L)·sin(θ) − b·dθ/dt<small>b es el coeficiente de amortiguación</small></div>
+    <h4>Período</h4>
+    <div class="theory-formula">T = 2π·√(L/g)<small>Válida para oscilaciones pequeñas. Depende solo de L y g — no de la masa ni de la amplitud.</small></div>
+    <h4>Energía mecánica</h4>
+    <div class="theory-formula">Ec = ½·m·v²        Ep = m·g·L·(1 − cosθ)<small>La energía total Ec + Ep se conserva si no hay amortiguación</small></div>
+    <p>En el punto más bajo (θ=0) toda la energía es cinética; en los extremos de la oscilación, toda es potencial. La amortiguación disipa energía mecánica en forma de calor/fricción, reduciendo gradualmente la amplitud.</p>`
+  },
+  gas: {
+    icon:'💨',
+    html:`
+    <h4>Modelo físico</h4>
+    <p>La teoría cinética modela un gas como un conjunto de partículas puntuales en movimiento aleatorio constante, que chocan elásticamente entre sí y con las paredes del recipiente. La presión macroscópica surge de estos impactos.</p>
+    <h4>Ley del gas ideal</h4>
+    <div class="theory-formula">P·V = N·k·T<small>P: presión · V: volumen · N: nº de partículas · k: cte. de Boltzmann · T: temperatura</small></div>
+    <h4>Relación temperatura–velocidad</h4>
+    <div class="theory-formula">½·m·v̄² = (3/2)·k·T  ⟹  v̄ ∝ √T<small>La temperatura es proporcional a la energía cinética media de las partículas</small></div>
+    <h4>Qué observar</h4>
+    <ul>
+      <li>Subir la <strong>temperatura</strong> acelera las partículas → más choques por segundo → mayor presión</li>
+      <li>Reducir el <strong>volumen</strong> con N y T fijos también aumenta la presión (más choques por unidad de área)</li>
+      <li>El cociente PV/NkT debería mantenerse ≈1 si el modelo se comporta como gas ideal</li>
+    </ul>`
+  },
+  standingwave: {
+    icon:'🎸',
+    html:`
+    <h4>Modelo físico</h4>
+    <p>Cuando una cuerda fija en ambos extremos se hace oscilar, las ondas viajeras que se reflejan en los extremos se superponen consigo mismas. Para ciertas frecuencias (los <strong>modos normales</strong> o armónicos), esta superposición forma un patrón estable: la <strong>onda estacionaria</strong>.</p>
+    <h4>Superposición de ondas</h4>
+    <div class="theory-formula">y(x,t) = A·sin(kx)·cos(ωt)<small>Producto de una parte espacial fija y una oscilación temporal — no hay propagación neta de energía</small></div>
+    <h4>Frecuencias armónicas</h4>
+    <div class="theory-formula">fₙ = n·(v / 2L) = n·f₁ ,  n = 1, 2, 3...<small>L: longitud de la cuerda · v: velocidad de la onda en la cuerda · f₁: frecuencia fundamental</small></div>
+    <h4>Nodos y antinodos</h4>
+    <ul>
+      <li><strong>Nodos</strong>: puntos donde la cuerda nunca se mueve (amplitud = 0). El modo n tiene n+1 nodos (incluyendo los extremos fijos).</li>
+      <li><strong>Antinodos</strong>: puntos de máxima amplitud de oscilación, ubicados entre nodos consecutivos.</li>
+      <li>La distancia entre dos nodos consecutivos es siempre λ/2.</li>
+    </ul>
+    <h4>Velocidad de la onda</h4>
+    <div class="theory-formula">v = √(T/μ)<small>T: tensión de la cuerda · μ: densidad lineal de masa</small></div>
+    <p>Por eso instrumentos de cuerda como la guitarra cambian de tono al ajustar la tensión (afinar) o usar cuerdas más gruesas (mayor μ).</p>`
+  },
+  induction: {
+    icon:'🧲',
+    html:`
+    <h4>Ley de Faraday</h4>
+    <p>Un campo magnético variable a través de una espira induce una fuerza electromotriz (FEM) en ella. No es necesario que el imán toque la bobina: basta con que el <strong>flujo magnético</strong> que atraviesa sus vueltas cambie en el tiempo.</p>
+    <div class="theory-formula">ε = −N · dΦ/dt<small>ε: FEM inducida (V) · N: nº de vueltas de la bobina · Φ: flujo magnético</small></div>
+    <h4>Flujo magnético</h4>
+    <div class="theory-formula">Φ = B·A·cos(α)<small>B: campo magnético · A: área de la espira · α: ángulo entre B y la normal a la espira</small></div>
+    <p>En esta simulación, Φ aumenta a medida que el imán se acerca al centro de la bobina y disminuye al alejarse — su derivada temporal (la pendiente de esa curva) es lo que determina la FEM inducida.</p>
+    <h4>Ley de Lenz</h4>
+    <p>El signo negativo en la ley de Faraday expresa la <strong>Ley de Lenz</strong>: la corriente inducida circula en el sentido que se opone al cambio de flujo que la genera. Por eso la corriente cambia de signo cuando el imán pasa de acercarse a alejarse.</p>
+    <h4>Corriente inducida</h4>
+    <div class="theory-formula">I = ε / R<small>R: resistencia total del circuito de la bobina</small></div>
+    <h4>Qué observar</h4>
+    <ul>
+      <li>Mover el imán <strong>más rápido</strong> aumenta dΦ/dt → mayor FEM, aunque el campo máximo sea el mismo</li>
+      <li>El polo que entra primero determina el signo inicial de la FEM</li>
+      <li>La FEM es máxima cuando el imán está cerca del centro de la bobina (mayor tasa de cambio del flujo), no cuando el flujo es máximo</li>
+    </ul>`
+  },
+  solarsystem: {
+    icon:'🌌',
+    html:`
+    <h4>Ley de gravitación universal</h4>
+    <p>Toda pareja de cuerpos con masa se atrae mutuamente con una fuerza proporcional al producto de sus masas e inversamente proporcional al cuadrado de la distancia que los separa.</p>
+    <div class="theory-formula">F = G · (m₁·m₂) / r²<small>G: constante gravitacional · r: distancia entre los centros de los cuerpos</small></div>
+    <h4>Aceleración resultante</h4>
+    <div class="theory-formula">a₁ = F/m₁ = G·m₂/r²  (dirigida hacia el cuerpo 2)<small>La aceleración de un cuerpo no depende de su propia masa, solo de la del otro cuerpo y la distancia</small></div>
+    <h4>Órbitas</h4>
+    <p>Una órbita circular estable requiere que la fuerza gravitacional actúe exactamente como fuerza centrípeta:</p>
+    <div class="theory-formula">v_órbita = √(G·M / r)<small>Velocidad necesaria para mantener una órbita circular de radio r alrededor de una masa M</small></div>
+    <h4>Conservación del momento</h4>
+    <p>Al fusionarse dos cuerpos (colisión), esta simulación conserva el momento lineal total: la velocidad resultante es el promedio ponderado por masa de ambos cuerpos, como en un choque perfectamente inelástico.</p>
+    <h4>Qué probar</h4>
+    <ul>
+      <li>Lanza un planeta con poca velocidad cerca del Sol: caerá en espiral o será capturado en una órbita elíptica</li>
+      <li>Lanza dos planetas en trayectorias cruzadas para ver la interacción gravitacional entre ellos, no solo con el Sol</li>
+    </ul>`
+  }
+};
+
+function openTheory(id){
+  const t = THEORY[id]; if(!t) return;
+  const s = SIMS.find(x=>x.id===id);
+  document.getElementById('theory-icon').textContent = t.icon;
+  document.getElementById('theory-title').textContent = (s?s.title:'Fundamento teórico') + ' — Fundamento teórico';
+  document.getElementById('theory-body').innerHTML = t.html;
+  document.getElementById('theory-overlay').classList.add('open');
+}
+function closeTheory(){
+  document.getElementById('theory-overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════
+// ARROW HELPER
+// ═══════════════════════════════════════════════════
+function drawArrow(ctx, x1, y1, x2, y2, color, lw=2.5, label='', ldx=10, ldy=0) {
+  const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<2) return;
+  const ang=Math.atan2(dy,dx), hl=Math.max(13,lw*5);
+  ctx.save();
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=lw;
+  ctx.shadowColor=color; ctx.shadowBlur=10;
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2-Math.cos(ang)*hl*.55, y2-Math.sin(ang)*hl*.55);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hl*Math.cos(ang-.38), y2-hl*Math.sin(ang-.38));
+  ctx.lineTo(x2-hl*Math.cos(ang+.38), y2-hl*Math.sin(ang+.38));
+  ctx.closePath(); ctx.fill();
+  if(label){
+    ctx.shadowBlur=0; ctx.font='bold 11px monospace'; ctx.fillStyle=color;
+    ctx.fillText(label, x2+ldx, y2+ldy);
+  }
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════
+// 1 · PROYECTIL
+// ═══════════════════════════════════════════════════
+function buildProjectile(container) {
+  container.innerHTML = `
+  <div class="mode-bar">
+    <span>Modo</span>
+    <button class="pill active-blue" id="pill-tray" onclick="setMode('trayectoria')">📍 Trayectoria — click en el recorrido</button>
+    <button class="pill inactive"    id="pill-pause" onclick="setMode('pausa')">⏸ Pausa — click congela el proyectil</button>
+    <button class="btn btn-theory" style="margin-left:auto" onclick="openTheory('projectile')">📖 Teoría y fórmulas</button>
+    <button class="btn btn-green" id="resume-btn" style="display:none" onclick="resumeProj()">▶ Reanudar</button>
+  </div>
+  <div class="ctrl-row">
+    <div class="ctrl-group">
+      <label>Ángulo (°)</label>
+      <input type="range" id="p-angle" min="5" max="85" value="45" oninput="pv('p-angle-v',this.value+'°')">
+      <span class="val" id="p-angle-v">45°</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Velocidad (m/s)</label>
+      <input type="range" id="p-vel" min="5" max="100" value="40" oninput="pv('p-vel-v',this.value)">
+      <span class="val" id="p-vel-v">40</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Gravedad (m/s²)</label>
+      <input type="range" id="p-g" min="1" max="25" value="9.8" step="0.1" oninput="pv('p-g-v',this.value)">
+      <span class="val" id="p-g-v">9.8</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Masa (kg)</label>
+      <input type="range" id="p-mass" min="0.1" max="10" value="1" step="0.1" oninput="pv('p-mass-v',this.value)">
+      <span class="val" id="p-mass-v">1</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Resist. aire</label>
+      <select id="p-drag">
+        <option value="0">Sin resistencia</option>
+        <option value="0.005">Leve</option>
+        <option value="0.015">Moderada</option>
+        <option value="0.04">Alta</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="launchProj()">🚀 Lanzar</button>
+      <button class="btn btn-gray" onclick="resetProj()">↺ Reset</button>
+      <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="p-vec" checked> Vectores
+      </label>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="proj-canvas" class="main-canvas" height="560"></canvas>
+    <div class="status-badge" id="status-badge"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:white"></div><span>|V| velocidad total</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div><span>Vx  componente X</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span>Vy  componente Y</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div><span>Fg  peso / gravedad</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span>Fd  resist. del aire</span></div>
+    </div>
+  </div>
+  <div class="data-row">
+    <div class="data-box">
+      <div class="data-box-title">Trayectoria completa</div>
+      <div class="data-vals">
+        <div><div class="dv-label">Alcance</div><div class="dv-val" id="d-range" style="color:#3b82f6">—</div></div>
+        <div><div class="dv-label">Altura máx</div><div class="dv-val" id="d-hmax" style="color:#06b6d4">—</div></div>
+        <div><div class="dv-label">T. vuelo</div><div class="dv-val" id="d-time" style="color:#8b5cf6">—</div></div>
+      </div>
+    </div>
+    <div class="data-box" id="vec-box" style="border-color:var(--border);transition:border-color .2s">
+      <div class="data-box-title" style="display:flex;align-items:center;gap:.5rem">
+        Vectores en instante
+        <span id="t-badge" style="display:none;font-size:.62rem;font-family:monospace;padding:2px 8px;border-radius:4px;background:#f59e0b22;color:#f59e0b"></span>
+      </div>
+      <div id="vec-vals" class="data-vals">
+        <div class="italic-hint">Lanza el proyectil primero</div>
+      </div>
+    </div>
+  </div>`;
+
+  const c = document.getElementById('proj-canvas');
+  c.width = c.parentElement.clientWidth;
+  c.onclick = projClick;
+  drawProjBase();
+}
+
+function pv(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+
+// state
+const PS = {
+  trail:[], running:false, paused:false, finished:false,
+  vx:0,vy:0,x:0,y:0,t:0,hmax:0,scale:1,
+  gVal:9.8,drag:0,mass:1,mode:'trayectoria',pinIdx:null
+};
+
+function setMode(m) {
+  PS.mode = m;
+  document.getElementById('pill-tray').className  = 'pill ' + (m==='trayectoria' ? 'active-blue' : 'inactive');
+  document.getElementById('pill-pause').className = 'pill ' + (m==='pausa'       ? 'active-yellow' : 'inactive');
+  resetProj();
+}
+
+const GND = 40;
+
+function drawProjBase() {
+  const c=document.getElementById('proj-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width, H=c.height;
+  ctx.fillStyle='#000010'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(30,58,95,.5)'; ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='#2563eb'; ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,H-GND);ctx.lineTo(W,H-GND);ctx.stroke();
+  ctx.fillStyle='rgba(37,99,235,.07)';ctx.fillRect(0,H-GND,W,GND);
+  ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=1;
+  for(let x=60;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,H-GND);ctx.lineTo(x,H-GND+8);ctx.stroke();}
+  const a=+document.getElementById('p-angle').value*Math.PI/180;
+  ctx.save();ctx.translate(50,H-GND);ctx.rotate(-a);
+  ctx.fillStyle='#4b5563';ctx.beginPath();ctx.roundRect(-10,-8,42,16,4);ctx.fill();ctx.restore();
+  ctx.beginPath();ctx.arc(50,H-GND,16,0,Math.PI*2);
+  const cg=ctx.createRadialGradient(44,H-GND-6,2,50,H-GND,16);
+  cg.addColorStop(0,'#6b7280');cg.addColorStop(1,'#1f2937');
+  ctx.fillStyle=cg;ctx.fill();
+}
+
+function projVectors(ctx,p,px,py,sc) {
+  const VS=Math.max(sc*1.3,4), FS=Math.max(sc*2.8,7);
+  const spd=Math.sqrt(p.vx**2+p.vy**2);
+  if(Math.abs(p.vx)>.3) drawArrow(ctx,px,py,px+p.vx*VS,py,'#06b6d4',2.5,`Vx=${p.vx.toFixed(1)}`,2,-8);
+  if(Math.abs(p.vy)>.3) drawArrow(ctx,px,py,px,py-p.vy*VS,'#4ade80',2.5,`Vy=${p.vy.toFixed(1)}`,4,0);
+  const vtx=px+p.vx*VS, vty=py-p.vy*VS;
+  drawArrow(ctx,px,py,vtx,vty,'rgba(255,255,255,.95)',3,`|V|=${spd.toFixed(1)}`,4,-6);
+  ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(px+p.vx*VS,py);ctx.lineTo(vtx,vty);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px,py-p.vy*VS);ctx.lineTo(vtx,vty);ctx.stroke();ctx.restore();
+  const Fg=p.mass*PS.gVal;
+  drawArrow(ctx,px,py,px,py+Fg*FS,'#ef4444',2.5,`Fg=${Fg.toFixed(1)}N`,4,6);
+  if(PS.drag>0&&spd>.1){
+    const Fd=PS.drag*spd*spd;
+    drawArrow(ctx,px,py,px+(-p.vx/spd)*Fd*FS*5,py-(-p.vy/spd)*Fd*FS*5,'#f97316',2.5,`Fd=${Fd.toFixed(2)}N`,4,0);
+  }
+}
+
+function projScene(frozenIdx) {
+  const c=document.getElementById('proj-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width, H=c.height;
+  const showVec=document.getElementById('p-vec')?.checked!==false;
+  drawProjBase();
+  if(!PS.trail.length) return;
+  const sc=PS.scale, upTo=frozenIdx!==null ? frozenIdx+1 : PS.trail.length;
+  const vel=+document.getElementById('p-vel').value;
+
+  for(let i=1;i<upTo;i++){
+    const p0=PS.trail[i-1],p1=PS.trail[i];
+    const spd=Math.sqrt(p1.vx**2+p1.vy**2);
+    const t=Math.min(spd/(vel||1),1);
+    const r=Math.round(59+t*196),gb=Math.round(130-t*100);
+    ctx.strokeStyle=`rgba(${r},${gb},246,.55)`;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(50+p0.x*sc,H-GND-p0.y*sc);ctx.lineTo(50+p1.x*sc,H-GND-p1.y*sc);ctx.stroke();
+  }
+  for(let i=0;i<upTo;i+=10){
+    const p=PS.trail[i];
+    ctx.beginPath();ctx.arc(50+p.x*sc,H-GND-p.y*sc,3,0,Math.PI*2);
+    ctx.fillStyle='rgba(148,197,253,.45)';ctx.fill();
+  }
+
+  if(PS.mode==='trayectoria' && PS.pinIdx!==null && PS.trail[PS.pinIdx] && frozenIdx===null){
+    const p=PS.trail[PS.pinIdx];
+    const px=50+p.x*sc, py=H-GND-p.y*sc;
+    ctx.beginPath();ctx.arc(px,py,10,0,Math.PI*2);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fillStyle='#fbbf24';ctx.fill();
+    if(showVec) projVectors(ctx,p,px,py,sc);
+  }
+
+  if(frozenIdx!==null && PS.trail[frozenIdx]){
+    const p=PS.trail[frozenIdx];
+    const bx=50+p.x*sc, by=H-GND-p.y*sc;
+    ctx.save();ctx.shadowColor='#f59e0b';ctx.shadowBlur=22;
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(bx,by,14,0,Math.PI*2);ctx.stroke();ctx.restore();
+    const bg=ctx.createRadialGradient(bx-4,by-4,1,bx,by,13);
+    bg.addColorStop(0,'#fde68a');bg.addColorStop(1,'#b45309');
+    ctx.beginPath();ctx.arc(bx,by,13,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+    ctx.save();ctx.fillStyle='rgba(10,14,26,.85)';ctx.beginPath();ctx.roundRect(bx-38,by-32,76,22,5);ctx.fill();
+    ctx.fillStyle='#f59e0b';ctx.font='bold 11px monospace';ctx.textAlign='center';
+    ctx.fillText(`⏸  t=${p.t.toFixed(2)}s`,bx,by-15);ctx.restore();
+    if(showVec) projVectors(ctx,p,bx,by,sc);
+  } else if(frozenIdx===null && !PS.finished && PS.trail.length){
+    const last=PS.trail[PS.trail.length-1];
+    const bx=50+last.x*sc, by=H-GND-last.y*sc;
+    const bg=ctx.createRadialGradient(bx-3,by-3,1,bx,by,11);
+    bg.addColorStop(0,'#bfdbfe');bg.addColorStop(1,'#1d4ed8');
+    ctx.beginPath();ctx.arc(bx,by,11,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+    if(showVec) projVectors(ctx,last,bx,by,sc);
+  }
+
+  if(PS.finished && PS.pinIdx===null && frozenIdx===null && PS.mode==='trayectoria'){
+    ctx.save();ctx.fillStyle='rgba(20,30,55,.88)';ctx.beginPath();
+    ctx.roundRect(W/2-180,H/2-22,360,40,8);ctx.fill();
+    ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';
+    ctx.fillText('🖱 Haz clic en la trayectoria para ver vectores',W/2,H/2+4);ctx.restore();
+  }
+}
+
+function setPinnedData(p) {
+  const spd=Math.sqrt(p.vx**2+p.vy**2);
+  const Fg=p.mass*PS.gVal, Fd=PS.drag>0?PS.drag*spd*spd:0;
+  document.getElementById('vec-box').style.borderColor='rgba(245,158,11,.35)';
+  const tb=document.getElementById('t-badge'); tb.style.display='';tb.textContent=`t=${p.t.toFixed(2)}s`;
+  document.getElementById('vec-vals').innerHTML=[
+    ['Vx', p.vx.toFixed(2)+' m/s','#06b6d4'],
+    ['Vy', p.vy.toFixed(2)+' m/s','#4ade80'],
+    ['|V|',spd.toFixed(2)+' m/s','white'],
+    ['Fg', Fg.toFixed(2)+' N','#ef4444'],
+    ['Fd', Fd.toFixed(3)+' N','#f97316'],
+    ['θ', (Math.atan2(p.vy,p.vx)*180/Math.PI).toFixed(1)+'°','#a78bfa'],
+    ['ax','0 m/s²','#94a3b8'],
+    ['ay',(-PS.gVal).toFixed(1)+' m/s²','#ef4444'],
+  ].map(([l,v,c])=>`<div><div class="dv-label">${l}</div><div class="dv-val" style="color:${c}">${v}</div></div>`).join('');
+}
+
+function projClick(e){
+  const c=document.getElementById('proj-canvas'); if(!c) return;
+  if(PS.mode==='pausa'){
+    if(PS.running && !PS.paused){
+      PS.running=false; PS.paused=true;
+      if(_raf){cancelAnimationFrame(_raf);_raf=null;}
+      PS.pinIdx=PS.trail.length-1;
+      projScene(PS.pinIdx);
+      const p=PS.trail[PS.pinIdx]; setPinnedData(p);
+      c.className='main-canvas paused-border'; c.style.cursor='pointer';
+      const sb=document.getElementById('status-badge');
+      sb.style.display='flex';sb.style.background='rgba(180,83,9,.9)';sb.style.border='1px solid #f59e0b';
+      sb.innerHTML='⏸ PAUSADO — click para reanudar';
+      document.getElementById('resume-btn').style.display='';
+    } else if(PS.paused){
+      resumeProj();
+    }
+    return;
+  }
+  if(!PS.trail.length||PS.running) return;
+  const rect=c.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(c.width/rect.width);
+  const my=(e.clientY-rect.top)*(c.height/rect.height);
+  const H=c.height;
+  let best=null,bestD=1e9;
+  PS.trail.forEach((p,i)=>{
+    const px=50+p.x*PS.scale,py=H-GND-p.y*PS.scale;
+    const d=Math.sqrt((mx-px)**2+(my-py)**2);
+    if(d<bestD){bestD=d;best=i;}
+  });
+  if(best!==null&&bestD<45){
+    PS.pinIdx=best;
+    projScene(null);
+    setPinnedData(PS.trail[best]);
+  }
+}
+
+function resumeProj(){
+  PS.paused=false; PS.running=true; PS.pinIdx=null;
+  document.getElementById('proj-canvas').className='main-canvas';
+  document.getElementById('proj-canvas').style.cursor='cell';
+  document.getElementById('status-badge').style.display='none';
+  document.getElementById('resume-btn').style.display='none';
+  document.getElementById('vec-vals').innerHTML='<div class="italic-hint">Click para pausar de nuevo</div>';
+  document.getElementById('vec-box').style.borderColor='var(--border)';
+  document.getElementById('t-badge').style.display='none';
+  projLoop();
+}
+
+function launchProj(){
+  stopAll(); PS.pinIdx=null; PS.paused=false; PS.finished=false;
+  const a=+document.getElementById('p-angle').value*Math.PI/180;
+  const vel=+document.getElementById('p-vel').value;
+  PS.gVal=+document.getElementById('p-g').value;
+  PS.drag=+document.getElementById('p-drag').value;
+  PS.mass=+document.getElementById('p-mass').value;
+  Object.assign(PS,{trail:[],running:true,vx:vel*Math.cos(a),vy:vel*Math.sin(a),x:0,y:0,t:0,hmax:0,scale:1});
+  ['d-range','d-hmax','d-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  document.getElementById('vec-vals').innerHTML=PS.mode==='pausa'
+    ? '<div class="italic-hint">Click para pausar y ver vectores</div>'
+    : '<div class="italic-hint">Esperando lanzamiento...</div>';
+  document.getElementById('vec-box').style.borderColor='var(--border)';
+  document.getElementById('t-badge').style.display='none';
+  const c=document.getElementById('proj-canvas');
+  c.className='main-canvas'; c.style.cursor=PS.mode==='pausa'?'cell':'crosshair';
+  document.getElementById('status-badge').style.display=PS.mode==='pausa'?'flex':'none';
+  if(PS.mode==='pausa'){
+    const sb=document.getElementById('status-badge');
+    sb.style.background='rgba(22,101,52,.88)';sb.style.border='1px solid #16a34a';
+    sb.innerHTML='▶ EN VUELO — click para pausar';
+  }
+  document.getElementById('resume-btn').style.display='none';
+  projLoop();
+}
+
+function projLoop(){
+  if(!PS.running) return;
+  const dt=0.016;
+  PS.vx-=PS.drag*PS.vx*Math.abs(PS.vx)*dt;
+  PS.vy-=(PS.gVal-PS.drag*PS.vy*Math.abs(PS.vy))*dt;
+  PS.x+=PS.vx*dt; PS.y+=PS.vy*dt; PS.t+=dt;
+  if(PS.y>PS.hmax) PS.hmax=PS.y;
+  PS.trail.push({x:PS.x,y:PS.y,vx:PS.vx,vy:PS.vy,mass:PS.mass,t:PS.t});
+  const c=document.getElementById('proj-canvas'); if(!c){PS.running=false;return;}
+  const maxX=Math.max(...PS.trail.map(p=>p.x),1);
+  const maxY=Math.max(...PS.trail.map(p=>p.y),1);
+  PS.scale=Math.min((c.width-80)/(maxX*1.15),(c.height-GND-30)/(maxY*1.2),6);
+  projScene(null);
+  if(PS.y<=0&&PS.t>.05){
+    PS.running=false; PS.finished=true;
+    projScene(PS.pinIdx);
+    document.getElementById('d-range').textContent=PS.x.toFixed(1)+' m';
+    document.getElementById('d-hmax').textContent=PS.hmax.toFixed(1)+' m';
+    document.getElementById('d-time').textContent=PS.t.toFixed(2)+' s';
+    if(PS.mode==='pausa'){
+      document.getElementById('status-badge').style.display='none';
+      document.getElementById('resume-btn').style.display='none';
+    }
+    if(PS.mode==='trayectoria'){
+      document.getElementById('vec-vals').innerHTML='<div class="italic-hint">🖱 Click en la trayectoria para ver vectores</div>';
+    }
+    return;
+  }
+  _raf=requestAnimationFrame(projLoop);
+}
+
+function resetProj(){
+  stopAll();
+  Object.assign(PS,{trail:[],running:false,paused:false,finished:false,pinIdx:null});
+  drawProjBase();
+  ['d-range','d-hmax','d-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  const vv=document.getElementById('vec-vals'); if(vv) vv.innerHTML='<div class="italic-hint">Lanza el proyectil primero</div>';
+  const vb=document.getElementById('vec-box'); if(vb) vb.style.borderColor='var(--border)';
+  const tb=document.getElementById('t-badge'); if(tb) tb.style.display='none';
+  const sb=document.getElementById('status-badge'); if(sb) sb.style.display='none';
+  const rb=document.getElementById('resume-btn'); if(rb) rb.style.display='none';
+  const pc=document.getElementById('proj-canvas'); if(pc){pc.className='main-canvas';pc.style.cursor='crosshair';}
+}
+
+// ═══════════════════════════════════════════════════
+// 2 · PÉNDULO
+// ═══════════════════════════════════════════════════
+function buildPendulum(container) {
+  container.innerHTML = `
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Longitud (m)</label><input type="range" id="pen-L" min="0.3" max="3" value="1.5" step="0.1" oninput="pv('pen-L-v',this.value+' m')"><span class="val" id="pen-L-v">1.5 m</span></div>
+    <div class="ctrl-group"><label>Ángulo inicial (°)</label><input type="range" id="pen-a" min="5" max="80" value="30" oninput="pv('pen-a-v',this.value+'°')"><span class="val" id="pen-a-v">30°</span></div>
+    <div class="ctrl-group"><label>Gravedad</label>
+      <select id="pen-g"><option value="9.8">Tierra 9.8</option><option value="1.62">Luna 1.62</option><option value="3.72">Marte 3.72</option><option value="24.8">Júpiter 24.8</option></select>
+    </div>
+    <div class="ctrl-group"><label>Amortiguación</label><input type="range" id="pen-d" min="0" max="0.1" value="0.005" step="0.001" oninput="pv('pen-d-v',this.value)"><span class="val" id="pen-d-v">0.005</span></div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="startPen()">▶ Iniciar</button>
+      <button class="btn btn-gray" onclick="stopPen()">■ Parar</button>
+      <button class="btn btn-theory" onclick="openTheory('pendulum')">📖 Teoría y fórmulas</button>
+    </div>
+  </div>
+  <div class="sim-inner"><canvas id="pen-canvas" class="sim-canvas" height="480"></canvas></div>
+  <div class="data-row" style="margin-top:.5rem">
+    <div class="data-box">
+      <div class="data-vals">
+        <div><div class="dv-label">Período (s)</div><div class="dv-val" id="pen-T" style="color:#3b82f6">—</div></div>
+        <div><div class="dv-label">Ángulo</div><div class="dv-val" id="pen-ang" style="color:#06b6d4">—</div></div>
+        <div><div class="dv-label">E. Cinética</div><div class="dv-val" id="pen-ek" style="color:#4ade80">—</div></div>
+        <div><div class="dv-label">E. Potencial</div><div class="dv-val" id="pen-ep" style="color:#f59e0b">—</div></div>
+      </div>
+    </div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Péndulo Simple</strong><br>
+      El período T = 2π√(L/g) depende solo de la longitud y la gravedad, no de la masa. La energía oscila entre cinética (en el centro) y potencial (en los extremos).
+    </div>
+  </div>`;
+  const c=document.getElementById('pen-canvas'); c.width=c.parentElement.clientWidth;
+  drawPen(+document.getElementById('pen-a').value*Math.PI/180);
+}
+let _penTheta=30*Math.PI/180, _penOmega=0;
+function drawPen(theta){
+  const c=document.getElementById('pen-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width,H=c.height;
+  const L=+document.getElementById('pen-L').value;
+  ctx.fillStyle='#000010';ctx.fillRect(0,0,W,H);
+  const cx=W/2,cy=70,ppm=Math.min(180,(H-100)/(L+.5));
+  const bx=cx+Math.sin(theta)*L*ppm, by=cy+Math.cos(theta)*L*ppm;
+  ctx.strokeStyle='#64748b';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx-40,cy);ctx.lineTo(cx+40,cy);ctx.stroke();
+  ctx.fillStyle='#374151';ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(bx,by);ctx.stroke();
+  const gr=ctx.createRadialGradient(bx-5,by-5,2,bx,by,22);gr.addColorStop(0,'#93c5fd');gr.addColorStop(1,'#1e40af');
+  ctx.beginPath();ctx.arc(bx,by,22,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+  const g=+document.getElementById('pen-g').value;
+  const ek=.5*(_penOmega*L)**2, ep=g*L*(1-Math.cos(theta)), et=ek+ep;
+  const maxE=g*L*(1-Math.cos(+document.getElementById('pen-a').value*Math.PI/180))+.01;
+  ctx.fillStyle='rgba(30,42,68,.7)';ctx.fillRect(W-70,20,50,H-50);
+  ctx.fillStyle='#4ade80';ctx.fillRect(W-70, 20+(1-ek/maxE)*(H-50), 22, (ek/maxE)*(H-50));
+  ctx.fillStyle='#f59e0b';ctx.fillRect(W-46, 20+(1-ep/maxE)*(H-50), 22, (ep/maxE)*(H-50));
+  ctx.fillStyle='#94a3b8';ctx.font='10px monospace';ctx.textAlign='center';
+  ctx.fillText('Ec',W-59,H-22);ctx.fillText('Ep',W-35,H-22);
+}
+function startPen(){
+  stopAll();
+  _penTheta=+document.getElementById('pen-a').value*Math.PI/180; _penOmega=0;
+  function loop(){
+    const L=+document.getElementById('pen-L').value;
+    const g=+document.getElementById('pen-g').value;
+    const d=+document.getElementById('pen-d').value;
+    const dt=.016;
+    _penOmega+=-(g/L)*Math.sin(_penTheta)*dt - d*_penOmega*dt;
+    _penTheta+=_penOmega*dt;
+    drawPen(_penTheta);
+    const T=2*Math.PI*Math.sqrt(L/g);
+    const ek=.5*(_penOmega*L)**2, ep=g*L*(1-Math.cos(_penTheta));
+    const el=id=>document.getElementById(id);
+    if(el('pen-T')){el('pen-T').textContent=T.toFixed(3)+' s';el('pen-ang').textContent=(_penTheta*180/Math.PI).toFixed(1)+'°';el('pen-ek').textContent=ek.toFixed(3)+' J';el('pen-ep').textContent=ep.toFixed(3)+' J';}
+    else return;
+    _raf=requestAnimationFrame(loop);
+  }
+  _raf=requestAnimationFrame(loop);
+}
+function stopPen(){stopAll();}
+
+// ═══════════════════════════════════════════════════
+// 3 · GAS IDEAL
+// ═══════════════════════════════════════════════════
+function buildGas(container){
+  container.innerHTML=`
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Temperatura (K)</label><input type="range" id="g-T" min="100" max="2000" value="300" oninput="pv('g-T-v',this.value+' K');updateGasParticles()"><span class="val" id="g-T-v">300 K</span></div>
+    <div class="ctrl-group"><label>Nº moléculas</label><input type="range" id="g-N" min="10" max="150" value="60" step="5" oninput="pv('g-N-v',this.value);updateGasParticles()"><span class="val" id="g-N-v">60</span></div>
+    <div class="ctrl-group"><label>Volumen relativo</label><input type="range" id="g-V" min="0.4" max="1.6" value="1" step="0.05" oninput="pv('g-V-v',this.value)"><span class="val" id="g-V-v">1</span></div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem">
+      <button class="btn btn-green" onclick="startGas()">▶ Iniciar</button>
+      <button class="btn btn-gray"  onclick="stopAll()">■ Parar</button>
+      <button class="btn btn-theory" onclick="openTheory('gas')">📖 Teoría y fórmulas</button>
+    </div>
+  </div>
+  <div class="sim-inner"><canvas id="gas-canvas" class="sim-canvas" height="440"></canvas></div>
+  <div class="data-row" style="margin-top:.5rem">
+    <div class="data-box"><div class="data-vals">
+      <div><div class="dv-label">Presión rel.</div><div class="dv-val" id="g-P" style="color:#10b981">—</div></div>
+      <div><div class="dv-label">Vel. media</div><div class="dv-val" id="g-v" style="color:#06b6d4">—</div></div>
+      <div><div class="dv-label">PV/NkT</div><div class="dv-val" id="g-pvnkt" style="color:#a78bfa">—</div></div>
+    </div></div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Ley del Gas Ideal</strong><br>
+      PV = NkT. Al aumentar T, las partículas se mueven más rápido y golpean las paredes con más frecuencia, aumentando la presión.
+    </div>
+  </div>`;
+  const c=document.getElementById('gas-canvas'); c.width=c.parentElement.clientWidth;
+  window._gasParticles=[];
+  initGasParticles();
+  startGas();
+}
+function initGasParticles(){
+  const c=document.getElementById('gas-canvas'); if(!c) return;
+  const T=+document.getElementById('g-T').value, N=+document.getElementById('g-N').value;
+  const V=+document.getElementById('g-V').value, speed=Math.sqrt(T/300)*3;
+  const W=c.width,H=c.height,cw=W*.6*Math.sqrt(V),ch=H*.7*Math.sqrt(V);
+  const x1=W/2-cw/2,x2=W/2+cw/2,y1=H/2-ch/2,y2=H/2+ch/2;
+  window._gasParticles=Array.from({length:N},()=>({
+    x:x1+Math.random()*(x2-x1),y:y1+Math.random()*(y2-y1),
+    vx:(Math.random()-.5)*speed*2,vy:(Math.random()-.5)*speed*2,
+    color:`hsl(${Math.random()*60+180},80%,60%)`
+  }));
+}
+function updateGasParticles(){
+  const N=+document.getElementById('g-N').value;
+  const T=+document.getElementById('g-T').value, speed=Math.sqrt(T/300)*3;
+  const ps=window._gasParticles||[];
+  const c=document.getElementById('gas-canvas'); if(!c) return;
+  const V=+document.getElementById('g-V').value;
+  const W=c.width,H=c.height,cw=W*.6*Math.sqrt(V),ch=H*.7*Math.sqrt(V);
+  const x1=W/2-cw/2,x2=W/2+cw/2,y1=H/2-ch/2,y2=H/2+ch/2;
+  while(ps.length<N) ps.push({x:x1+Math.random()*(x2-x1),y:y1+Math.random()*(y2-y1),vx:(Math.random()-.5)*speed*2,vy:(Math.random()-.5)*speed*2,color:`hsl(${Math.random()*60+180},80%,60%)`});
+  ps.forEach(p=>{const s=Math.sqrt(p.vx**2+p.vy**2)||.01;const ns=speed*(.8+Math.random()*.4);p.vx=p.vx/s*ns;p.vy=p.vy/s*ns;});
+  window._gasParticles=ps;
+}
+function startGas(){
+  stopAll(); initGasParticles();
+  function loop(){
+    const c=document.getElementById('gas-canvas'); if(!c) return;
+    const ctx=c.getContext('2d'), W=c.width,H=c.height;
+    const T=+document.getElementById('g-T').value, N=+document.getElementById('g-N').value;
+    const V=+document.getElementById('g-V').value;
+    const cw=W*.6*Math.sqrt(V),ch=H*.7*Math.sqrt(V);
+    const x1=W/2-cw/2,x2=W/2+cw/2,y1=H/2-ch/2,y2=H/2+ch/2;
+    ctx.fillStyle='#000010';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='#10b981';ctx.lineWidth=2;ctx.strokeRect(x1,y1,cw,ch);
+    ctx.fillStyle='rgba(16,185,129,.04)';ctx.fillRect(x1,y1,cw,ch);
+    (window._gasParticles||[]).slice(0,N).forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<x1+4){p.x=x1+4;p.vx*=-1;}if(p.x>x2-4){p.x=x2-4;p.vx*=-1;}
+      if(p.y<y1+4){p.y=y1+4;p.vy*=-1;}if(p.y>y2-4){p.y=y2-4;p.vy*=-1;}
+      ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();
+    });
+    const P=(N*T)/(V*300*60)*10;
+    const speed=Math.sqrt(T/300)*3;
+    const el=id=>document.getElementById(id);
+    if(el('g-P')){el('g-P').textContent=P.toFixed(2)+' atm';el('g-v').textContent=(speed*60).toFixed(0)+' m/s';el('g-pvnkt').textContent=(P*V/((N/60)*T/300)).toFixed(2);}
+    else return;
+    _raf=requestAnimationFrame(loop);
+  }
+  _raf=requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════
+// 4 · ONDAS ESTACIONARIAS (CUERDA VIBRANTE)
+// ═══════════════════════════════════════════════════
+function buildStandingWave(container){
+  container.innerHTML=`
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Armónico (n)</label><input type="range" id="sw-n" min="1" max="8" value="2" step="1" oninput="pv('sw-n-v',this.value); sw_updateInfo()"><span class="val" id="sw-n-v">2</span></div>
+    <div class="ctrl-group"><label>Amplitud</label><input type="range" id="sw-a" min="5" max="60" value="35" oninput="pv('sw-a-v',this.value)"><span class="val" id="sw-a-v">35</span></div>
+    <div class="ctrl-group"><label>Velocidad onda (px/s)</label><input type="range" id="sw-v" min="50" max="400" value="180" step="10" oninput="pv('sw-v-v',this.value); sw_updateInfo()"><span class="val" id="sw-v-v">180</span></div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap">
+      <button class="btn" style="background:#7c3aed" onclick="startStandingWave()">▶ Iniciar</button>
+      <button class="btn btn-gray" onclick="stopAll()">■ Parar</button>
+      <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="sw-nodes" checked> Nodos/antinodos
+      </label>
+      <button class="btn btn-theory" onclick="openTheory('standingwave')">📖 Teoría y fórmulas</button>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="sw-canvas" class="main-canvas" height="560" style="cursor:default"></canvas>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div><span>Cuerda (instante actual)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(167,139,250,.25)"></div><span>Envolvente (amplitud máx.)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>● Nodo &nbsp; ○ Antinodo</span></div>
+    </div>
+  </div>
+  <div class="data-row" style="margin-top:.5rem">
+    <div class="data-box"><div class="data-vals">
+      <div><div class="dv-label">Frecuencia fₙ</div><div class="dv-val" id="sw-freq" style="color:#8b5cf6">—</div></div>
+      <div><div class="dv-label">Longitud de onda λ</div><div class="dv-val" id="sw-lambda" style="color:#06b6d4">—</div></div>
+      <div><div class="dv-label">Nº de nodos</div><div class="dv-val" id="sw-nodecount" style="color:#f59e0b">—</div></div>
+    </div></div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Onda estacionaria</strong><br>
+      Cada armónico n forma un patrón fijo de nodos (quietos) y antinodos (oscilación máxima). Sube "n" y observa cómo aumentan los nodos. Pulsa el botón de teoría para ver las fórmulas completas.
+    </div>
+  </div>`;
+  const c=document.getElementById('sw-canvas'); c.width=c.parentElement.clientWidth;
+  sw_updateInfo();
+  drawStandingWaveFrame(0);
+  startStandingWave();
+}
+let _swT=0;
+function sw_updateInfo(){
+  const c=document.getElementById('sw-canvas'); if(!c) return;
+  const n=+document.getElementById('sw-n').value;
+  const v=+document.getElementById('sw-v').value;
+  const L=c.width-100;
+  const lambda=2*L/n;
+  const f=v/lambda;
+  const el=id=>document.getElementById(id);
+  if(el('sw-freq')) el('sw-freq').textContent=f.toFixed(2)+' Hz';
+  if(el('sw-lambda')) el('sw-lambda').textContent=lambda.toFixed(0)+' px';
+  if(el('sw-nodecount')) el('sw-nodecount').textContent=(n+1)+' (incl. extremos)';
+}
+function drawStandingWaveFrame(t){
+  const c=document.getElementById('sw-canvas'); if(!c) return;
+  const ctx=c.getContext('2d'), W=c.width, H=c.height;
+  const n=+document.getElementById('sw-n').value;
+  const amp=+document.getElementById('sw-a').value;
+  const v=+document.getElementById('sw-v').value;
+  const showNodes=document.getElementById('sw-nodes')?.checked!==false;
+  const x0=50, x1=W-50, L=x1-x0, cy=H/2;
+  const lambda=2*L/n, freq=v/lambda, omega=2*Math.PI*freq;
+
+  ctx.fillStyle='#000010'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(30,58,95,.4)'; ctx.lineWidth=.5;
+  for(let gx=0; gx<W; gx+=60){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+  for(let gy=0; gy<H; gy+=60){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+
+  // envolvente (amplitud máxima posible en cada punto)
+  ctx.beginPath();
+  for(let x=x0;x<=x1;x++){ const k=Math.PI*n/L; const env=amp*Math.abs(Math.sin(k*(x-x0))); if(x===x0) ctx.moveTo(x,cy-env); else ctx.lineTo(x,cy-env); }
+  for(let x=x1;x>=x0;x--){ const k=Math.PI*n/L; const env=amp*Math.sin(k*(x-x0)); ctx.lineTo(x,cy+env); }
+  ctx.closePath();
+  ctx.fillStyle='rgba(167,139,250,.12)'; ctx.fill();
+
+  // cuerda en el instante t
+  ctx.beginPath();
+  const k=Math.PI*n/L;
+  for(let x=x0;x<=x1;x++){
+    const y=cy - amp*Math.sin(k*(x-x0))*Math.cos(omega*t);
+    if(x===x0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=3; ctx.shadowColor='#8b5cf6'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+
+  // soportes fijos
+  [x0,x1].forEach(x=>{
+    ctx.fillStyle='#4b5563'; ctx.fillRect(x-8,cy-26,16,52);
+    ctx.fillStyle='#9ca3af'; ctx.font='10px monospace'; ctx.textAlign='center';
+    ctx.fillText(x===x0?'fijo':'fijo', x, cy+44);
+  });
+
+  // nodos y antinodos
+  if(showNodes){
+    for(let i=0;i<=n;i++){
+      const x=x0+i*(L/n);
+      ctx.beginPath(); ctx.arc(x,cy,6,0,Math.PI*2);
+      ctx.fillStyle='#f59e0b'; ctx.fill();
+      ctx.strokeStyle='#000010'; ctx.lineWidth=1.5; ctx.stroke();
+    }
+    for(let i=0;i<n;i++){
+      const x=x0+(i+0.5)*(L/n);
+      const yTop=cy-amp-14;
+      ctx.beginPath(); ctx.arc(x,yTop,5,0,Math.PI*2);
+      ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2; ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle='#64748b'; ctx.font='12px monospace'; ctx.textAlign='left';
+  ctx.fillText(`n = ${n}`, 16, 26);
+}
+function startStandingWave(){
+  stopAll(); _swT=0;
+  function loop(){
+    const c=document.getElementById('sw-canvas'); if(!c) return;
+    drawStandingWaveFrame(_swT);
+    _swT+=0.016;
+    sw_updateInfo();
+    _raf=requestAnimationFrame(loop);
+  }
+  _raf=requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════
+// 5 · INDUCCIÓN ELECTROMAGNÉTICA (LEY DE FARADAY-LENZ)
+// ═══════════════════════════════════════════════════
+function buildInduction(container){
+  container.innerHTML=`
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Vueltas de la bobina (N)</label><input type="range" id="ind-N" min="5" max="60" value="25" step="1" oninput="pv('ind-N-v',this.value)"><span class="val" id="ind-N-v">25</span></div>
+    <div class="ctrl-group"><label>Fuerza del imán (B)</label><input type="range" id="ind-B" min="1" max="10" value="5" step="0.5" oninput="pv('ind-B-v',this.value)"><span class="val" id="ind-B-v">5</span></div>
+    <div class="ctrl-group"><label>Polaridad</label>
+      <select id="ind-pole"><option value="1">Norte (N) hacia la bobina</option><option value="-1">Sur (S) hacia la bobina</option></select>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap">
+      <button class="btn" style="background:#d97706" onclick="ind_sweep(1)">→ Pasar imán (derecha)</button>
+      <button class="btn" style="background:#d97706" onclick="ind_sweep(-1)">← Pasar imán (izq.)</button>
+      <button class="btn btn-gray" onclick="ind_reset()">↺ Reset</button>
+      <button class="btn btn-theory" onclick="openTheory('induction')">📖 Teoría y fórmulas</button>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="ind-canvas" class="main-canvas" height="560" style="cursor:grab"></canvas>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div><span>Imán (rojo=Norte, azul=Sur)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div><span>Flujo Φ(t)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span>FEM inducida ε(t)</span></div>
+    </div>
+  </div>
+  <div class="data-row" style="margin-top:.5rem">
+    <div class="data-box"><div class="data-vals">
+      <div><div class="dv-label">Flujo Φ</div><div class="dv-val" id="ind-phi" style="color:#fbbf24">—</div></div>
+      <div><div class="dv-label">FEM ε = −NdΦ/dt</div><div class="dv-val" id="ind-emf" style="color:#4ade80">—</div></div>
+      <div><div class="dv-label">Corriente inducida</div><div class="dv-val" id="ind-current" style="color:#3b82f6">—</div></div>
+    </div></div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Inducción electromagnética</strong><br>
+      Arrastra el imán con el mouse o usa los botones. Mientras más rápido se mueve, mayor es la FEM inducida (no depende solo de la posición, sino de qué tan rápido cambia el flujo).
+    </div>
+  </div>`;
+  const c=document.getElementById('ind-canvas'); c.width=c.parentElement.clientWidth;
+  ind_init();
+}
+
+const IND = {magX:0, coilX:0, history:[], dragging:false, lastX:0, lastT:0, vel:0, autoVx:0};
+
+function ind_init(){
+  stopAll();
+  const c=document.getElementById('ind-canvas'); if(!c) return;
+  IND.coilX = c.width/2;
+  IND.magX = 70;
+  IND.history = [];
+  IND.dragging = false;
+  IND.autoVx = 0;
+
+  const getX = (e) => {
+    const rect = c.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return (clientX - rect.left) * (c.width / rect.width);
+  };
+  c.onmousedown = (e) => { IND.dragging = true; IND.autoVx = 0; c.style.cursor='grabbing'; IND.lastX=getX(e); IND.lastT=performance.now(); };
+  window.onmousemove = (e) => {
+    if(!IND.dragging || !document.getElementById('ind-canvas')) return;
+    const x = getX(e); const now = performance.now();
+    const dt = Math.max((now - IND.lastT)/1000, 0.001);
+    IND.vel = (x - IND.lastX) / dt;
+    IND.magX = Math.max(20, Math.min(c.width-20, x));
+    IND.lastX = x; IND.lastT = now;
+  };
+  window.onmouseup = () => { IND.dragging = false; if(document.getElementById('ind-canvas')) document.getElementById('ind-canvas').style.cursor='grab'; IND.vel = 0; };
+  c.ontouchstart = (e) => { e.preventDefault(); IND.dragging = true; IND.autoVx = 0; IND.lastX=getX(e); IND.lastT=performance.now(); };
+  window.ontouchmove = (e) => {
+    if(!IND.dragging || !document.getElementById('ind-canvas')) return;
+    const x = getX(e); const now = performance.now();
+    const dt = Math.max((now - IND.lastT)/1000, 0.001);
+    IND.vel = (x - IND.lastX) / dt;
+    IND.magX = Math.max(20, Math.min(c.width-20, x));
+    IND.lastX = x; IND.lastT = now;
+  };
+  window.ontouchend = () => { IND.dragging = false; IND.vel = 0; };
+
+  ind_runLoop();
+}
+
+function ind_reset(){
+  const c=document.getElementById('ind-canvas'); if(!c) return;
+  IND.magX = 70; IND.vel = 0; IND.autoVx = 0; IND.history = [];
+}
+
+function ind_sweep(dir){
+  IND.autoVx = dir * 260;
+  IND.dragging = false;
+}
+
+function ind_phiOf(magX, coilX, B, pole){
+  const dist = Math.abs(magX - coilX);
+  const sigma = 70;
+  return pole * B * Math.exp(-(dist*dist)/(2*sigma*sigma));
+}
+
+function ind_runLoop(){
+  let lastT = performance.now();
+  let lastPhi = null;
+
+  function loop(){
+    const c = document.getElementById('ind-canvas'); if(!c) return;
+    const ctx = c.getContext('2d'), W = c.width, H = c.height;
+    const now = performance.now();
+    const dt = Math.min((now - lastT)/1000, 0.05);
+    lastT = now;
+
+    if(!IND.dragging && Math.abs(IND.autoVx) > 0.5){
+      IND.magX += IND.autoVx * dt;
+      IND.vel = IND.autoVx;
+      if(IND.magX < 10 || IND.magX > W-10){ IND.autoVx = 0; IND.vel = 0; }
+      IND.magX = Math.max(10, Math.min(W-10, IND.magX));
+    } else if(!IND.dragging){
+      IND.vel *= 0.9;
+      if(Math.abs(IND.vel) < 0.5) IND.vel = 0;
+    }
+
+    const N = +document.getElementById('ind-N').value;
+    const B = +document.getElementById('ind-B').value;
+    const pole = +document.getElementById('ind-pole').value;
+    const coilX = IND.coilX = W/2;
+
+    const phi = ind_phiOf(IND.magX, coilX, B, pole);
+    const dPhiDt = lastPhi===null ? 0 : (phi - lastPhi)/Math.max(dt,0.001);
+    lastPhi = phi;
+    const emf = -N * dPhiDt;
+    const current = emf / 50; // resistencia fija de referencia 50 ohm
+
+    IND.history.push({t:now, phi, emf});
+    if(IND.history.length > 240) IND.history.shift();
+
+    // ── dibujo ──
+    ctx.fillStyle='#000010'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(30,58,95,.4)'; ctx.lineWidth=.5;
+    for(let gx=0; gx<W; gx+=60){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+
+    const sceneY = H*0.30, sceneH = H*0.30;
+
+    // bobina (vista lateral: varias espiras elípticas)
+    const coilTurns = Math.max(6, Math.min(22, Math.round(N/3)));
+    const coilW = 110, coilH = sceneH*0.85;
+    for(let i=0;i<coilTurns;i++){
+      const ex = coilX - coilW/2 + (i/(coilTurns-1))*coilW;
+      ctx.beginPath();
+      ctx.ellipse(ex, sceneY, 14, coilH/2, 0, 0, Math.PI*2);
+      ctx.strokeStyle = '#92400e'; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+    ctx.fillStyle='rgba(245,158,11,.06)';
+    ctx.fillRect(coilX-coilW/2-14, sceneY-coilH/2, coilW+28, coilH);
+
+    // glow de flujo proporcional a |phi|
+    const glowAlpha = Math.min(Math.abs(phi)/B, 1)*0.5;
+    if(glowAlpha > 0.02){
+      const gr = ctx.createRadialGradient(coilX, sceneY, 5, coilX, sceneY, 90);
+      gr.addColorStop(0, `rgba(251,191,36,${glowAlpha})`);
+      gr.addColorStop(1, 'rgba(251,191,36,0)');
+      ctx.beginPath(); ctx.arc(coilX, sceneY, 90, 0, Math.PI*2); ctx.fillStyle = gr; ctx.fill();
+    }
+
+    // imán
+    const magW = 64, magH = 30;
+    const isNorthLeft = pole === 1;
+    ctx.save();
+    ctx.translate(IND.magX, sceneY);
+    ctx.fillStyle = isNorthLeft ? '#ef4444' : '#3b82f6';
+    ctx.fillRect(-magW/2, -magH/2, magW/2, magH);
+    ctx.fillStyle = isNorthLeft ? '#3b82f6' : '#ef4444';
+    ctx.fillRect(0, -magH/2, magW/2, magH);
+    ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 1.5; ctx.strokeRect(-magW/2,-magH/2,magW,magH);
+    ctx.fillStyle = 'white'; ctx.font = 'bold 13px monospace'; ctx.textAlign='center';
+    ctx.fillText(isNorthLeft?'N':'S', -magW/4, 5);
+    ctx.fillText(isNorthLeft?'S':'N', magW/4, 5);
+    ctx.restore();
+
+    // flecha de corriente inducida (sentido según signo de emf)
+    if(Math.abs(current) > 0.003){
+      const arrowDir = current > 0 ? 1 : -1;
+      const ax = coilX, ay = sceneY - coilH/2 - 22;
+      drawArrow(ctx, ax - arrowDir*22, ay, ax + arrowDir*22, ay, '#4ade80', 3, 'I induc.', -10, -10);
+    }
+
+    // velocidad indicador
+    if(Math.abs(IND.vel) > 3){
+      const vdir = IND.vel > 0 ? 1 : -1;
+      drawArrow(ctx, IND.magX, sceneY+magH/2+18, IND.magX+vdir*30, sceneY+magH/2+18, '#94a3b8', 2, 'v', 4, 4);
+    }
+
+    // ── gráficas Φ(t) y ε(t) ──
+    const gY0 = H*0.58, gY1 = H - 30, gH = gY1-gY0, gX0=50, gX1=W-30;
+    ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(gX0, gY0+gH/2); ctx.lineTo(gX1, gY0+gH/2); ctx.stroke();
+    ctx.fillStyle='#64748b'; ctx.font='10px monospace'; ctx.textAlign='left';
+    ctx.fillText('Φ(t) y ε(t) vs. tiempo', gX0, gY0-8);
+
+    const maxAbsPhi = B*1.05;
+    const maxAbsEmf = Math.max(...IND.history.map(h=>Math.abs(h.emf)), N*0.3);
+
+    ctx.beginPath();
+    IND.history.forEach((h,i)=>{
+      const px = gX0 + (i/240)*(gX1-gX0);
+      const py = gY0+gH/2 - (h.phi/maxAbsPhi)*(gH/2-4);
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2; ctx.stroke();
+
+    ctx.beginPath();
+    IND.history.forEach((h,i)=>{
+      const px = gX0 + (i/240)*(gX1-gX0);
+      const py = gY0+gH/2 - (h.emf/maxAbsEmf)*(gH/2-4);
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.strokeStyle='#4ade80'; ctx.lineWidth=2; ctx.stroke();
+
+    const el = id=>document.getElementById(id);
+    if(el('ind-phi')){
+      el('ind-phi').textContent = phi.toFixed(2)+' Wb·u';
+      el('ind-emf').textContent = emf.toFixed(2)+' V';
+      el('ind-current').textContent = (current*1000).toFixed(1)+' mA';
+    } else return;
+
+    _raf = requestAnimationFrame(loop);
+  }
+  _raf = requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════
+// 6 · SISTEMA SOLAR
+// ═══════════════════════════════════════════════════
+let ss_bodies = [];
+let ss_isDragging = false, ss_startX = 0, ss_startY = 0, ss_currX = 0, ss_currY = 0;
+const SS_VEL_FACTOR = 0.03;
+const SS_TRAIL = 150;
+const ss_colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e', '#a8a29e'];
+
+class SSBody {
+  constructor(x, y, vx, vy, mass, color, isSun = false) {
+    this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+    this.ax = 0; this.ay = 0; this.mass = mass;
+    this.color = color; this.isSun = isSun;
+    this.dead = false; this.trail = [];
+    this.updateRadius();
+  }
+  updateRadius() {
+    this.radius = this.isSun ? 25 : Math.max(3, Math.sqrt(this.mass) * 1.5);
+  }
+  draw(ctx) {
+    if (this.trail.length > 1) {
+      ctx.beginPath(); ctx.moveTo(this.trail[0].x, this.trail[0].y);
+      for (let i = 1; i < this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
+      ctx.strokeStyle = this.color; ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.4; ctx.stroke(); ctx.globalAlpha = 1.0;
+    }
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    if (this.isSun) { ctx.shadowBlur = 40; ctx.shadowColor = this.color; }
+    ctx.fill(); ctx.shadowBlur = 0;
+
+    if (window.SS_VECTORS && !this.isSun) {
+      this.drawVec(ctx, this.vx, this.vy, 12, '#00ffff');
+      this.drawVec(ctx, this.ax, this.ay, 450, '#ff00ff');
+    }
+  }
+  drawVec(ctx, vecX, vecY, scale, color) {
+    if (Math.abs(vecX) < 0.0001 && Math.abs(vecY) < 0.0001) return;
+    let endX = this.x + vecX * scale, endY = this.y + vecY * scale;
+    let angle = Math.atan2(vecY, vecX), h = 7;
+    ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(endX, endY);
+    ctx.lineTo(endX - h * Math.cos(angle - Math.PI / 6), endY - h * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(endX, endY);
+    ctx.lineTo(endX - h * Math.cos(angle + Math.PI / 6), endY - h * Math.sin(angle + Math.PI / 6));
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+
+function buildSolarSystem(container) {
+  container.innerHTML = `
+  <div class="ctrl-row">
+    <div class="ctrl-group"><label>Gravedad (G)</label><input type="range" id="ss-G" min="0.1" max="2" value="0.5" step="0.1" oninput="pv('ss-G-v',this.value); window.SS_G = +this.value;"><span class="val" id="ss-G-v">0.5</span></div>
+    <div class="ctrl-group"><label>Vectores</label><select id="ss-vec" onchange="window.SS_VECTORS = this.value === '1'"><option value="0">Ocultos</option><option value="1">Visibles</option></select></div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap; margin-left:auto;">
+      <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted);cursor:pointer;margin-right:1rem;">
+        <input type="checkbox" id="ss-inter" checked onchange="window.SS_INTER = this.checked"> Grav. interplanetaria
+      </label>
+      <button class="btn btn-blue" onclick="initSolarSystem()">↺ Reiniciar</button>
+      <button class="btn btn-gray" onclick="ss_bodies.forEach(b => b.trail = [])">Limpiar estelas</button>
+      <button class="btn btn-theory" onclick="openTheory('solarsystem')">📖 Teoría y fórmulas</button>
+    </div>
+  </div>
+  <div class="sim-inner" style="position:relative;">
+    <canvas id="ss-canvas" class="sim-canvas" height="560" style="background:#030308; cursor:crosshair; touch-action:none;"></canvas>
+  </div>
+  <div class="data-row" style="margin-top:.5rem">
+    <div class="data-box"><div class="data-vals">
+      <div><div class="dv-label">Cuerpos celestes</div><div class="dv-val" id="ss-count" style="color:#fbbf24">—</div></div>
+    </div></div>
+    <div class="data-box" style="font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Sistema Solar</strong><br>
+      Haz clic y arrastra en el espacio negro para lanzar un planeta (estilo resortera). La línea define su velocidad inicial. Los planetas se atraen gravitacionalmente y se fusionan al chocar.
+    </div>
+  </div>`;
+
+  window.SS_G = 0.5;
+  window.SS_VECTORS = false;
+  window.SS_INTER = true;
+
+  const c = document.getElementById('ss-canvas');
+  c.width = c.parentElement.clientWidth;
+
+  const getPos = (e) => {
+    const rect = c.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (clientX - rect.left) * (c.width / rect.width), y: (clientY - rect.top) * (c.height / rect.height) };
+  };
+
+  c.addEventListener('mousedown', (e) => { ss_isDragging = true; const p = getPos(e); ss_startX = ss_currX = p.x; ss_startY = ss_currY = p.y; });
+  window.addEventListener('mousemove', (e) => { if (ss_isDragging && document.getElementById('ss-canvas')) { const p = getPos(e); ss_currX = p.x; ss_currY = p.y; } });
+  window.addEventListener('mouseup', () => {
+    if (!ss_isDragging) return;
+    ss_isDragging = false;
+    let vx = (ss_startX - ss_currX) * SS_VEL_FACTOR, vy = (ss_startY - ss_currY) * SS_VEL_FACTOR;
+    if (Math.abs(vx) > 0.1 || Math.abs(vy) > 0.1) {
+      ss_bodies.push(new SSBody(ss_startX, ss_startY, vx, vy, 5 + Math.random() * 40, ss_colors[Math.floor(Math.random() * ss_colors.length)]));
+    }
+  });
+
+  c.addEventListener('touchstart', (e) => { e.preventDefault(); ss_isDragging = true; const p = getPos(e); ss_startX = ss_currX = p.x; ss_startY = ss_currY = p.y; }, {passive:false});
+  window.addEventListener('touchmove', (e) => { if(ss_isDragging && document.getElementById('ss-canvas')) { const p = getPos(e); ss_currX = p.x; ss_currY = p.y; } }, {passive:false});
+  window.addEventListener('touchend', () => {
+    if (!ss_isDragging) return;
+    ss_isDragging = false;
+    let vx = (ss_startX - ss_currX) * SS_VEL_FACTOR, vy = (ss_startY - ss_currY) * SS_VEL_FACTOR;
+    if (Math.abs(vx) > 0.1 || Math.abs(vy) > 0.1) {
+      ss_bodies.push(new SSBody(ss_startX, ss_startY, vx, vy, 5 + Math.random() * 40, ss_colors[Math.floor(Math.random() * ss_colors.length)]));
+    }
+  });
+
+  initSolarSystem();
+}
+
+function initSolarSystem() {
+  stopAll();
+  const c = document.getElementById('ss-canvas');
+  if(!c) return;
+  ss_bodies = [];
+  const cx = c.width / 2, cy = c.height / 2;
+  
+  // Sol
+  ss_bodies.push(new SSBody(cx, cy, 0, 0, 8000, '#fbbf24', true));
+  
+  // Planetas iniciales
+  let r1 = 90, v1 = Math.sqrt((window.SS_G * 8000) / r1);
+  ss_bodies.push(new SSBody(cx, cy - r1, v1, 0, 20, '#ef4444'));
+  
+  let r2 = 160, v2 = Math.sqrt((window.SS_G * 8000) / r2);
+  ss_bodies.push(new SSBody(cx, cy + r2, -v2, 0, 40, '#3b82f6'));
+  
+  let r3 = 240, v3 = Math.sqrt((window.SS_G * 8000) / r3);
+  ss_bodies.push(new SSBody(cx - r3, cy, 0, -v3, 15, '#10b981'));
+
+  function loop() {
+    const c = document.getElementById('ss-canvas'); if (!c) return;
+    const ctx = c.getContext('2d'), W = c.width, H = c.height;
+
+    // Fondo espacial
+    ctx.fillStyle = '#030308'; ctx.fillRect(0, 0, W, H);
+
+    for (let b of ss_bodies) { b.ax = 0; b.ay = 0; }
+    
+    // Físicas interplanetarias
+    for (let i = 0; i < ss_bodies.length; i++) {
+      for (let j = i + 1; j < ss_bodies.length; j++) {
+        let b1 = ss_bodies[i], b2 = ss_bodies[j];
+        if (b1.dead || b2.dead) continue;
+        
+        let dx = b2.x - b1.x, dy = b2.y - b1.y, distSq = dx * dx + dy * dy, dist = Math.sqrt(distSq);
+
+        if (dist < b1.radius + b2.radius) {
+          if (b1.isSun) { b2.dead = true; continue; }
+          if (b2.isSun) { b1.dead = true; continue; }
+          let tm = b1.mass + b2.mass;
+          let fx = (b1.mass * b1.vx + b2.mass * b2.vx) / tm, fy = (b1.mass * b1.vy + b2.mass * b2.vy) / tm;
+          if (b1.mass >= b2.mass) { b1.vx = fx; b1.vy = fy; b1.mass = tm; b1.updateRadius(); b2.dead = true; }
+          else { b2.vx = fx; b2.vy = fy; b2.mass = tm; b2.updateRadius(); b1.dead = true; }
+          continue;
+        }
+        
+        if (!window.SS_INTER && !b1.isSun && !b2.isSun) continue;
+
+        let f = (window.SS_G * b1.mass * b2.mass) / distSq;
+        let ax = (f * dx) / dist, ay = (f * dy) / dist;
+        
+        if (!b1.isSun) { b1.ax += ax / b1.mass; b1.ay += ay / b1.mass; b1.vx += ax / b1.mass; b1.vy += ay / b1.mass; }
+        if (!b2.isSun) { b2.ax -= ax / b2.mass; b2.ay -= ay / b2.mass; b2.vx -= ax / b2.mass; b2.vy -= ay / b2.mass; }
+      }
+    }
+    
+    // Movimiento y estelas
+    for (let b of ss_bodies) {
+      if (b.dead || b.isSun) continue;
+      b.x += b.vx; b.y += b.vy;
+      if (Math.random() < 0.5) { b.trail.push({ x: b.x, y: b.y }); if (b.trail.length > SS_TRAIL) b.trail.shift(); }
+    }
+    ss_bodies = ss_bodies.filter(b => !b.dead);
+
+    // Dibujado
+    for (let b of ss_bodies) b.draw(ctx);
+
+    // Resortera
+    if (ss_isDragging) {
+      ctx.beginPath(); ctx.moveTo(ss_startX, ss_startY); ctx.lineTo(ss_currX, ss_currY);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+      let dx = ss_startX - ss_currX, dy = ss_startY - ss_currY;
+      ctx.beginPath(); ctx.moveTo(ss_startX, ss_startY); ctx.lineTo(ss_startX + dx, ss_startY + dy);
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.8)"; ctx.lineWidth = 3; ctx.stroke();
+      ctx.beginPath(); ctx.arc(ss_startX, ss_startY, 5, 0, Math.PI * 2); ctx.fillStyle = "white"; ctx.fill();
+    }
+
+    const el = document.getElementById('ss-count'); if(el) el.textContent = ss_bodies.length; else return;
+    _raf = requestAnimationFrame(loop);
+  }
+  _raf = requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
