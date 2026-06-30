@@ -40,28 +40,21 @@ footer{text-align:center;padding:30px;background:#1E293B;color:#fff;margin-top:4
 </section>
 </div>
 <footer>© 2026 EduSim</footer>
-<javascript>
-fetch("simuladores.json")
-.then(r=>r.json())
-.then(simuladores=>{
-
-    const grid=document.querySelector(".grid");
-
-    simuladores.forEach(sim=>{
-
-        grid.innerHTML+=`
+<script>
+  fetch("simuladores.json")
+  .then(r => r.json())
+  .then(simuladores => {
+    const grid = document.querySelector(".grid");
+    simuladores.forEach(sim => {
+      grid.innerHTML += `
         <div class="card">
-            <h3>${sim.icono} ${sim.titulo}</h3>
-            <p>${sim.categoria}</p>
-
-            <a href="${sim.archivo}" class="btn">
-                Abrir
-            </a>
-
+          <h3>${sim.icono} ${sim.titulo}</h3>
+          <p>${sim.categoria}</p>
+          <a href="${sim.archivo}" class="btn">
+            Abrir
+          </a>
         </div>`;
-
     });
-
-});
-</javascript>
+  });
+</script>
 </body></html>
