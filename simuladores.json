@@ -1,0 +1,50 @@
+[
+  {
+    "titulo": "Lanzamiento de Proyectiles",
+    "categoria": "Física",
+    "icono": "🏹",
+    "archivo": "lanzamiento-proyectiles.html"
+  },
+  {
+    "titulo": "Escala de pH Químico",
+    "categoria": "Química",
+    "icono": "🧪",
+    "archivo": "simulador_ph.html"
+  },
+  {
+    "titulo": "Seguridad vial",
+    "categoria": "Seguridad Civil",
+    "icono": "🚘",
+    "archivo": "simulador_crosswalk.html"
+  },
+  {
+    "titulo": "Fracciones",
+    "categoria": "Matemática",
+    "icono": "➗",
+    "archivo": "simulador_fractions.html"
+  },
+  {
+    "titulo": "Programación",
+    "categoria": "Algoritmos",
+    "icono": "💻",
+    "archivo": "simulador_programming.html"
+  },
+  {
+    "titulo": "Clasificación de residuos",
+    "categoria": "Ambiente",
+    "icono": "♻️",
+    "archivo": "simulador_waste.html"
+  },
+  {
+    "titulo": "RCP",
+    "categoria": "Salud",
+    "icono": "❤️",
+    "archivo": "simulador_cpr.html"
+  },
+  {
+    "titulo": "Cuadros de Punnett",
+    "categoria": "Biología",
+    "icono": "🧬",
+    "archivo": "simulador_punnett.html"
+  }
+]
